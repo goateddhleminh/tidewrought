@@ -1,0 +1,1049 @@
+{
+  "name": "Tidewrought Asset Pack",
+  "version": 1,
+  "note": "All images are PNG with transparency, pixel art. Render with image-rendering: pixelated and integer scales only.",
+  "baseSceneSize": {
+    "w": 192,
+    "h": 108
+  },
+  "recommendedScale": 4,
+  "palette": {
+    "ink": "#1a1228"
+  },
+  "groups": {
+    "character": {
+      "idle": {
+        "file": "character/char_idle.png",
+        "w": 64,
+        "h": 32,
+        "frames": 2,
+        "frameW": 32,
+        "frameH": 32,
+        "fps": 2,
+        "loop": true,
+        "hands": [
+          {
+            "x": 23,
+            "y": 18
+          },
+          {
+            "x": 23,
+            "y": 19
+          }
+        ]
+      },
+      "cast": {
+        "file": "character/char_cast.png",
+        "w": 64,
+        "h": 32,
+        "frames": 2,
+        "frameW": 32,
+        "frameH": 32,
+        "fps": 4,
+        "loop": true,
+        "hands": [
+          {
+            "x": 21,
+            "y": 10
+          },
+          {
+            "x": 22,
+            "y": 8
+          }
+        ]
+      },
+      "reel": {
+        "file": "character/char_reel.png",
+        "w": 64,
+        "h": 32,
+        "frames": 2,
+        "frameW": 32,
+        "frameH": 32,
+        "fps": 6,
+        "loop": true,
+        "hands": [
+          {
+            "x": 23,
+            "y": 18
+          },
+          {
+            "x": 23,
+            "y": 20
+          }
+        ]
+      },
+      "cheer": {
+        "file": "character/char_cheer.png",
+        "w": 64,
+        "h": 32,
+        "frames": 2,
+        "frameW": 32,
+        "frameH": 32,
+        "fps": 4,
+        "loop": true,
+        "hands": [
+          {
+            "x": 23,
+            "y": 6
+          },
+          {
+            "x": 23,
+            "y": 8
+          }
+        ]
+      }
+    },
+    "rods": {
+      "twig": {
+        "file": "rods/rod_01_twig.png",
+        "w": 32,
+        "h": 32,
+        "name": "Twig Rod",
+        "tier": 1,
+        "anchor": {
+          "x": 6,
+          "y": 25
+        },
+        "tip": {
+          "x": 29,
+          "y": 3
+        }
+      },
+      "bamboo": {
+        "file": "rods/rod_02_bamboo.png",
+        "w": 32,
+        "h": 32,
+        "name": "Bamboo Rod",
+        "tier": 2,
+        "anchor": {
+          "x": 6,
+          "y": 25
+        },
+        "tip": {
+          "x": 29,
+          "y": 3
+        }
+      },
+      "oak": {
+        "file": "rods/rod_03_oak.png",
+        "w": 32,
+        "h": 32,
+        "name": "Oak Rod",
+        "tier": 3,
+        "anchor": {
+          "x": 6,
+          "y": 25
+        },
+        "tip": {
+          "x": 29,
+          "y": 3
+        }
+      },
+      "iron": {
+        "file": "rods/rod_04_iron.png",
+        "w": 32,
+        "h": 32,
+        "name": "Iron Rod",
+        "tier": 4,
+        "anchor": {
+          "x": 6,
+          "y": 25
+        },
+        "tip": {
+          "x": 29,
+          "y": 3
+        }
+      },
+      "carbon": {
+        "file": "rods/rod_05_carbon.png",
+        "w": 32,
+        "h": 32,
+        "name": "Carbon Rod",
+        "tier": 5,
+        "anchor": {
+          "x": 6,
+          "y": 25
+        },
+        "tip": {
+          "x": 29,
+          "y": 3
+        }
+      },
+      "golden": {
+        "file": "rods/rod_06_golden.png",
+        "w": 32,
+        "h": 32,
+        "name": "Golden Rod",
+        "tier": 6,
+        "anchor": {
+          "x": 6,
+          "y": 25
+        },
+        "tip": {
+          "x": 29,
+          "y": 3
+        }
+      },
+      "crystal": {
+        "file": "rods/rod_07_crystal.png",
+        "w": 32,
+        "h": 32,
+        "name": "Crystal Rod",
+        "tier": 7,
+        "anchor": {
+          "x": 6,
+          "y": 25
+        },
+        "tip": {
+          "x": 29,
+          "y": 3
+        }
+      },
+      "starlight": {
+        "file": "rods/rod_08_starlight.png",
+        "w": 32,
+        "h": 32,
+        "name": "Starlight Rod",
+        "tier": 8,
+        "anchor": {
+          "x": 6,
+          "y": 25
+        },
+        "tip": {
+          "x": 29,
+          "y": 3
+        }
+      }
+    },
+    "fish": {
+      "minnow": {
+        "file": "fish/fish_minnow.png",
+        "w": 18,
+        "h": 10,
+        "name": "Pond Minnow",
+        "zone": 1,
+        "rarity": "common",
+        "baseValue": 2,
+        "flavor": "Small, silver and extremely confident.",
+        "facing": "right"
+      },
+      "bluegill": {
+        "file": "fish/fish_bluegill.png",
+        "w": 24,
+        "h": 18,
+        "name": "Bluegill",
+        "zone": 1,
+        "rarity": "common",
+        "baseValue": 4,
+        "flavor": "Has a blue gill. Not sure which one.",
+        "facing": "right"
+      },
+      "perch": {
+        "file": "fish/fish_perch.png",
+        "w": 26,
+        "h": 16,
+        "name": "Striped Perch",
+        "zone": 1,
+        "rarity": "uncommon",
+        "baseValue": 9,
+        "flavor": "Wears stripes to look faster.",
+        "facing": "right"
+      },
+      "carp": {
+        "file": "fish/fish_carp.png",
+        "w": 30,
+        "h": 18,
+        "name": "Whisker Carp",
+        "zone": 1,
+        "rarity": "uncommon",
+        "baseValue": 14,
+        "flavor": "Judges you with long whiskers.",
+        "facing": "right"
+      },
+      "catfish": {
+        "file": "fish/fish_catfish.png",
+        "w": 32,
+        "h": 18,
+        "name": "Mud Catfish",
+        "zone": 1,
+        "rarity": "rare",
+        "baseValue": 40,
+        "flavor": "Lives where the mud is deepest.",
+        "facing": "right"
+      },
+      "koi": {
+        "file": "fish/fish_koi.png",
+        "w": 36,
+        "h": 22,
+        "name": "Golden Koi",
+        "zone": 1,
+        "rarity": "legendary",
+        "baseValue": 600,
+        "flavor": "Said to grant wishes. Mostly sells for a lot.",
+        "facing": "right"
+      },
+      "mudskipper": {
+        "file": "fish/fish_mudskipper.png",
+        "w": 26,
+        "h": 16,
+        "name": "Mudskipper",
+        "zone": 2,
+        "rarity": "common",
+        "baseValue": 6,
+        "flavor": "Walks on land. Rude.",
+        "facing": "right"
+      },
+      "snakehead": {
+        "file": "fish/fish_snakehead.png",
+        "w": 36,
+        "h": 14,
+        "name": "Snakehead",
+        "zone": 2,
+        "rarity": "uncommon",
+        "baseValue": 18,
+        "flavor": "Looks like a snake. Acts like one.",
+        "facing": "right"
+      },
+      "archer": {
+        "file": "fish/fish_archer.png",
+        "w": 26,
+        "h": 18,
+        "name": "Archerfish",
+        "zone": 2,
+        "rarity": "uncommon",
+        "baseValue": 22,
+        "flavor": "Spits water. Never misses.",
+        "facing": "right"
+      },
+      "barra": {
+        "file": "fish/fish_barra.png",
+        "w": 34,
+        "h": 20,
+        "name": "Barramundi",
+        "zone": 2,
+        "rarity": "rare",
+        "baseValue": 55,
+        "flavor": "Big, silver and a little pink.",
+        "facing": "right"
+      },
+      "tarpon": {
+        "file": "fish/fish_tarpon.png",
+        "w": 38,
+        "h": 22,
+        "name": "Silver Tarpon",
+        "zone": 2,
+        "rarity": "epic",
+        "baseValue": 150,
+        "flavor": "Jumps higher than your expectations.",
+        "facing": "right"
+      },
+      "eel": {
+        "file": "fish/fish_eel.png",
+        "w": 40,
+        "h": 14,
+        "name": "Spark Eel",
+        "zone": 2,
+        "rarity": "epic",
+        "baseValue": 190,
+        "flavor": "Do not touch. Seriously.",
+        "facing": "right"
+      },
+      "clown": {
+        "file": "fish/fish_clown.png",
+        "w": 22,
+        "h": 14,
+        "name": "Clownfish",
+        "zone": 3,
+        "rarity": "common",
+        "baseValue": 10,
+        "flavor": "Always joking. Nobody laughs.",
+        "facing": "right"
+      },
+      "tang": {
+        "file": "fish/fish_tang.png",
+        "w": 28,
+        "h": 20,
+        "name": "Blue Tang",
+        "zone": 3,
+        "rarity": "uncommon",
+        "baseValue": 26,
+        "flavor": "Forgetful, but very blue.",
+        "facing": "right"
+      },
+      "puffer": {
+        "file": "fish/fish_puffer.png",
+        "w": 26,
+        "h": 22,
+        "name": "Puffer Pal",
+        "zone": 3,
+        "rarity": "rare",
+        "baseValue": 70,
+        "flavor": "Do not annoy. Or do. Boing.",
+        "facing": "right"
+      },
+      "angel": {
+        "file": "fish/fish_angel.png",
+        "w": 28,
+        "h": 30,
+        "name": "Emperor Angelfish",
+        "zone": 3,
+        "rarity": "rare",
+        "baseValue": 85,
+        "flavor": "Elegant. Knows it.",
+        "facing": "right"
+      },
+      "lion": {
+        "file": "fish/fish_lion.png",
+        "w": 36,
+        "h": 26,
+        "name": "Lionfish",
+        "zone": 3,
+        "rarity": "epic",
+        "baseValue": 210,
+        "flavor": "Spiny, striped and fabulous.",
+        "facing": "right"
+      },
+      "moonjelly": {
+        "file": "fish/fish_moonjelly.png",
+        "w": 22,
+        "h": 26,
+        "name": "Moon Jelly",
+        "zone": 3,
+        "rarity": "epic",
+        "baseValue": 240,
+        "flavor": "Floats. Glows. Stings a little.",
+        "facing": "right"
+      },
+      "lantern": {
+        "file": "fish/fish_lantern.png",
+        "w": 22,
+        "h": 12,
+        "name": "Lanternfish",
+        "zone": 4,
+        "rarity": "common",
+        "baseValue": 14,
+        "flavor": "Carries its own light. Shows off.",
+        "facing": "right"
+      },
+      "blob": {
+        "file": "fish/fish_blob.png",
+        "w": 26,
+        "h": 20,
+        "name": "Blobfish",
+        "zone": 4,
+        "rarity": "uncommon",
+        "baseValue": 34,
+        "flavor": "Looks sad. Is actually fine.",
+        "facing": "right"
+      },
+      "gulper": {
+        "file": "fish/fish_gulper.png",
+        "w": 40,
+        "h": 18,
+        "name": "Gulper Eel",
+        "zone": 4,
+        "rarity": "rare",
+        "baseValue": 90,
+        "flavor": "Mostly mouth.",
+        "facing": "right"
+      },
+      "viper": {
+        "file": "fish/fish_viper.png",
+        "w": 36,
+        "h": 18,
+        "name": "Viperfish",
+        "zone": 4,
+        "rarity": "rare",
+        "baseValue": 100,
+        "flavor": "Has seen things. Bites them.",
+        "facing": "right"
+      },
+      "angler": {
+        "file": "fish/fish_angler.png",
+        "w": 38,
+        "h": 30,
+        "name": "Lantern Angler",
+        "zone": 4,
+        "rarity": "epic",
+        "baseValue": 260,
+        "flavor": "The light is a trap. The smile is also a trap.",
+        "facing": "right"
+      },
+      "ghost": {
+        "file": "fish/fish_ghost.png",
+        "w": 38,
+        "h": 24,
+        "name": "Abyssal Ghost",
+        "zone": 4,
+        "rarity": "legendary",
+        "baseValue": 800,
+        "flavor": "You did not catch it. It allowed you to.",
+        "facing": "right"
+      },
+      "starfin": {
+        "file": "fish/fish_starfin.png",
+        "w": 28,
+        "h": 20,
+        "name": "Starfin",
+        "zone": 5,
+        "rarity": "uncommon",
+        "baseValue": 48,
+        "flavor": "Each spot is a tiny star.",
+        "facing": "right"
+      },
+      "nebula": {
+        "file": "fish/fish_nebula.png",
+        "w": 34,
+        "h": 22,
+        "name": "Nebula Koi",
+        "zone": 5,
+        "rarity": "rare",
+        "baseValue": 130,
+        "flavor": "Swims in colors that do not exist.",
+        "facing": "right"
+      },
+      "comet": {
+        "file": "fish/fish_comet.png",
+        "w": 40,
+        "h": 18,
+        "name": "Comet Darter",
+        "zone": 5,
+        "rarity": "epic",
+        "baseValue": 320,
+        "flavor": "Fast enough to leave a tail.",
+        "facing": "right"
+      },
+      "cosmojelly": {
+        "file": "fish/fish_cosmojelly.png",
+        "w": 24,
+        "h": 28,
+        "name": "Cosmic Jelly",
+        "zone": 5,
+        "rarity": "epic",
+        "baseValue": 360,
+        "flavor": "Contains an entire small galaxy.",
+        "facing": "right"
+      },
+      "leviathan": {
+        "file": "fish/fish_leviathan.png",
+        "w": 48,
+        "h": 30,
+        "name": "Void Leviathan",
+        "zone": 5,
+        "rarity": "legendary",
+        "baseValue": 1500,
+        "flavor": "The lake is a very small part of it.",
+        "facing": "right"
+      },
+      "prism": {
+        "file": "fish/fish_prism.png",
+        "w": 40,
+        "h": 24,
+        "name": "Prismatic Carp",
+        "zone": 5,
+        "rarity": "mythic",
+        "baseValue": 6000,
+        "flavor": "It is every color. It is also none.",
+        "facing": "right"
+      }
+    },
+    "bosses": {
+      "kraken": {
+        "file": "fish/boss_kraken.png",
+        "w": 72,
+        "h": 64,
+        "name": "The Kraken"
+      }
+    },
+    "bait": {
+      "worm": {
+        "file": "bait/bait_worm.png",
+        "w": 16,
+        "h": 16,
+        "name": "Worm",
+        "desc": "Safe and cheap. Small luck bonus."
+      },
+      "glowgrub": {
+        "file": "bait/bait_glowgrub.png",
+        "w": 16,
+        "h": 16,
+        "name": "Glow Grub",
+        "desc": "+rare weight while active."
+      },
+      "chaos": {
+        "file": "bait/bait_chaos.png",
+        "w": 16,
+        "h": 16,
+        "name": "Chaos Lure",
+        "desc": "Randomizes every modifier on the catch."
+      },
+      "golden": {
+        "file": "bait/bait_golden.png",
+        "w": 16,
+        "h": 16,
+        "name": "Golden Hook Bait",
+        "desc": "Guarantees at least Uncommon."
+      },
+      "gambler": {
+        "file": "bait/bait_gambler.png",
+        "w": 16,
+        "h": 16,
+        "name": "Gambler's Bait",
+        "desc": "50% nothing, 50% x4 luck."
+      }
+    },
+    "weather": {
+      "clear": {
+        "file": "weather/weather_clear.png",
+        "w": 16,
+        "h": 16,
+        "name": "Clear"
+      },
+      "rain": {
+        "file": "weather/weather_rain.png",
+        "w": 16,
+        "h": 16,
+        "name": "Rain"
+      },
+      "storm": {
+        "file": "weather/weather_storm.png",
+        "w": 16,
+        "h": 16,
+        "name": "Storm"
+      },
+      "fog": {
+        "file": "weather/weather_fog.png",
+        "w": 16,
+        "h": 16,
+        "name": "Fog"
+      },
+      "aurora": {
+        "file": "weather/weather_aurora.png",
+        "w": 16,
+        "h": 16,
+        "name": "Aurora"
+      },
+      "bloodmoon": {
+        "file": "weather/weather_bloodmoon.png",
+        "w": 16,
+        "h": 16,
+        "name": "Blood Moon"
+      },
+      "meteor": {
+        "file": "weather/weather_meteor.png",
+        "w": 16,
+        "h": 16,
+        "name": "Meteor Shower"
+      }
+    },
+    "items": {
+      "coin": {
+        "file": "items/coin.png",
+        "w": 16,
+        "h": 16
+      },
+      "coin_spin": {
+        "file": "items/coin_spin.png",
+        "w": 64,
+        "h": 16,
+        "frames": 4,
+        "frameW": 16,
+        "frameH": 16,
+        "fps": 8,
+        "loop": true
+      },
+      "pearl": {
+        "file": "items/pearl.png",
+        "w": 16,
+        "h": 16
+      },
+      "cursed_shard": {
+        "file": "items/cursed_shard.png",
+        "w": 16,
+        "h": 16
+      },
+      "xp_gem": {
+        "file": "items/xp_gem.png",
+        "w": 16,
+        "h": 16
+      }
+    },
+    "chests": {
+      "wood_closed": {
+        "file": "items/chest_wood_closed.png",
+        "w": 26,
+        "h": 24
+      },
+      "wood_open": {
+        "file": "items/chest_wood_open.png",
+        "w": 26,
+        "h": 24
+      },
+      "silver_closed": {
+        "file": "items/chest_silver_closed.png",
+        "w": 26,
+        "h": 24
+      },
+      "silver_open": {
+        "file": "items/chest_silver_open.png",
+        "w": 26,
+        "h": 24
+      },
+      "gold_closed": {
+        "file": "items/chest_gold_closed.png",
+        "w": 26,
+        "h": 24
+      },
+      "gold_open": {
+        "file": "items/chest_gold_open.png",
+        "w": 26,
+        "h": 24
+      },
+      "cosmic_closed": {
+        "file": "items/chest_cosmic_closed.png",
+        "w": 26,
+        "h": 24
+      },
+      "cosmic_open": {
+        "file": "items/chest_cosmic_open.png",
+        "w": 26,
+        "h": 24
+      }
+    },
+    "icons": {
+      "luck": {
+        "file": "icons/icon_luck.png",
+        "w": 16,
+        "h": 16
+      },
+      "speed": {
+        "file": "icons/icon_speed.png",
+        "w": 16,
+        "h": 16
+      },
+      "value": {
+        "file": "icons/icon_value.png",
+        "w": 16,
+        "h": 16
+      },
+      "crit": {
+        "file": "icons/icon_crit.png",
+        "w": 16,
+        "h": 16
+      },
+      "reel": {
+        "file": "icons/icon_reel.png",
+        "w": 16,
+        "h": 16
+      },
+      "offline": {
+        "file": "icons/icon_offline.png",
+        "w": 16,
+        "h": 16
+      },
+      "bait": {
+        "file": "icons/icon_bait.png",
+        "w": 16,
+        "h": 16
+      },
+      "hook": {
+        "file": "icons/icon_hook.png",
+        "w": 16,
+        "h": 16
+      },
+      "achievement": {
+        "file": "icons/icon_achievement.png",
+        "w": 16,
+        "h": 16
+      },
+      "relic": {
+        "file": "icons/icon_relic.png",
+        "w": 16,
+        "h": 16
+      },
+      "fish": {
+        "file": "icons/icon_fish.png",
+        "w": 16,
+        "h": 16
+      },
+      "heart": {
+        "file": "icons/icon_heart.png",
+        "w": 16,
+        "h": 16
+      },
+      "xp_star": {
+        "file": "icons/icon_xp_star.png",
+        "w": 16,
+        "h": 16
+      }
+    },
+    "helpers": {
+      "cat": {
+        "file": "helpers/helper_cat.png",
+        "w": 24,
+        "h": 24,
+        "name": "Dock Cat",
+        "desc": "Auto-sells your catches."
+      },
+      "pelican": {
+        "file": "helpers/helper_pelican.png",
+        "w": 24,
+        "h": 24,
+        "name": "Pelican Pete",
+        "desc": "Finds extra bait."
+      },
+      "sailor": {
+        "file": "helpers/helper_sailor.png",
+        "w": 24,
+        "h": 24,
+        "name": "Old Sailor",
+        "desc": "Raises the offline cap."
+      },
+      "mermaid": {
+        "file": "helpers/helper_mermaid.png",
+        "w": 24,
+        "h": 24,
+        "name": "Marina",
+        "desc": "Bonus luck."
+      }
+    },
+    "effects": {
+      "splash": {
+        "file": "effects/splash.png",
+        "w": 80,
+        "h": 16,
+        "frames": 4,
+        "frameW": 20,
+        "frameH": 16,
+        "fps": 10,
+        "loop": false
+      },
+      "ripple": {
+        "file": "effects/ripple.png",
+        "w": 120,
+        "h": 10,
+        "frames": 3,
+        "frameW": 40,
+        "frameH": 10,
+        "fps": 6,
+        "loop": false
+      },
+      "sparkle": {
+        "file": "effects/sparkle.png",
+        "w": 36,
+        "h": 9,
+        "frames": 4,
+        "frameW": 9,
+        "frameH": 9,
+        "fps": 10,
+        "loop": true
+      },
+      "gull": {
+        "file": "effects/gull.png",
+        "w": 32,
+        "h": 8,
+        "frames": 2,
+        "frameW": 16,
+        "frameH": 8,
+        "fps": 4,
+        "loop": true
+      },
+      "bobber": {
+        "file": "effects/bobber.png",
+        "w": 20,
+        "h": 14,
+        "frames": 2,
+        "frameW": 10,
+        "frameH": 14,
+        "fps": 4,
+        "loop": true,
+        "note": "frame 0 floating, frame 1 = bite (dipped). Water line is at y=10."
+      },
+      "exclaim": {
+        "file": "effects/exclaim.png",
+        "w": 8,
+        "h": 14
+      },
+      "raindrop": {
+        "file": "effects/raindrop.png",
+        "w": 3,
+        "h": 8
+      },
+      "cloud_1": {
+        "file": "effects/cloud_1.png",
+        "w": 56,
+        "h": 22
+      },
+      "cloud_2": {
+        "file": "effects/cloud_2.png",
+        "w": 40,
+        "h": 16
+      },
+      "cloud_3": {
+        "file": "effects/cloud_3.png",
+        "w": 72,
+        "h": 26
+      }
+    },
+    "ui": {
+      "panel_navy": {
+        "file": "ui/panel_navy.png",
+        "w": 24,
+        "h": 24,
+        "nineSlice": 8
+      },
+      "panel_wood": {
+        "file": "ui/panel_wood.png",
+        "w": 24,
+        "h": 24,
+        "nineSlice": 8
+      },
+      "panel_green": {
+        "file": "ui/panel_green.png",
+        "w": 24,
+        "h": 24,
+        "nineSlice": 8
+      },
+      "button_normal": {
+        "file": "ui/button_normal.png",
+        "w": 24,
+        "h": 16,
+        "nineSlice": 6
+      },
+      "button_pressed": {
+        "file": "ui/button_pressed.png",
+        "w": 24,
+        "h": 16,
+        "nineSlice": 6
+      },
+      "button_disabled": {
+        "file": "ui/button_disabled.png",
+        "w": 24,
+        "h": 16,
+        "nineSlice": 6
+      },
+      "slot_common": {
+        "file": "ui/slot_common.png",
+        "w": 24,
+        "h": 24,
+        "nineSlice": 4
+      },
+      "slot_uncommon": {
+        "file": "ui/slot_uncommon.png",
+        "w": 24,
+        "h": 24,
+        "nineSlice": 4
+      },
+      "slot_rare": {
+        "file": "ui/slot_rare.png",
+        "w": 24,
+        "h": 24,
+        "nineSlice": 4
+      },
+      "slot_epic": {
+        "file": "ui/slot_epic.png",
+        "w": 24,
+        "h": 24,
+        "nineSlice": 4
+      },
+      "slot_legendary": {
+        "file": "ui/slot_legendary.png",
+        "w": 24,
+        "h": 24,
+        "nineSlice": 4
+      },
+      "slot_mythic": {
+        "file": "ui/slot_mythic.png",
+        "w": 24,
+        "h": 24,
+        "nineSlice": 4
+      }
+    },
+    "scene": {
+      "dock": {
+        "file": "scenes/dock.png",
+        "w": 96,
+        "h": 44,
+        "note": "Place so that dock top edge is the character seat line (character canvas y=25)."
+      }
+    },
+    "backgrounds": {
+      "pond": {
+        "file": "scenes/bg_pond.png",
+        "w": 192,
+        "h": 108,
+        "name": "Sunny Pond",
+        "horizonY": 62
+      },
+      "creek": {
+        "file": "scenes/bg_creek.png",
+        "w": 192,
+        "h": 108,
+        "name": "Mangrove Creek",
+        "horizonY": 62
+      },
+      "reef": {
+        "file": "scenes/bg_reef.png",
+        "w": 192,
+        "h": 108,
+        "name": "Coral Reef",
+        "horizonY": 62
+      },
+      "trench": {
+        "file": "scenes/bg_trench.png",
+        "w": 192,
+        "h": 108,
+        "name": "Abyssal Trench",
+        "horizonY": 62
+      },
+      "void": {
+        "file": "scenes/bg_void.png",
+        "w": 192,
+        "h": 108,
+        "name": "Starlit Void Lake",
+        "horizonY": 62
+      }
+    },
+    "hero": {
+      "pond": {
+        "file": "scenes/preview_pond.png",
+        "w": 192,
+        "h": 108,
+        "note": "Composed example for reference only."
+      },
+      "creek": {
+        "file": "scenes/preview_creek.png",
+        "w": 192,
+        "h": 108,
+        "note": "Composed example for reference only."
+      },
+      "reef": {
+        "file": "scenes/preview_reef.png",
+        "w": 192,
+        "h": 108,
+        "note": "Composed example for reference only."
+      },
+      "trench": {
+        "file": "scenes/preview_trench.png",
+        "w": 192,
+        "h": 108,
+        "note": "Composed example for reference only."
+      },
+      "void": {
+        "file": "scenes/preview_void.png",
+        "w": 192,
+        "h": 108,
+        "note": "Composed example for reference only."
+      }
+    }
+  },
+  "layering": "Draw the rod BEHIND the character so the hands overlap the grip. Align rod anchor to the frame hand point: rodX = charX + hand.x - rodAnchor.x ; rodY = charY + hand.y - rodAnchor.y. Character canvas y=25 is the dock surface line.",
+  "rarityColors": {
+    "common": "#9aa8b8",
+    "uncommon": "#58b84a",
+    "rare": "#4a8fe8",
+    "epic": "#a45af0",
+    "legendary": "#f2a02a",
+    "mythic": "#ff5ac8"
+  }
+}

@@ -1,0 +1,232 @@
+@import "tailwindcss";
+
+:root {
+  --ink: #1a1228;
+  --navy-bg: #16233c;
+  --navy-dark: #0f172a;
+  --wood-bg: #583826;
+  --green-bg: #1e4236;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+  image-rendering: pixelated;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #100b1a;
+  color: #eef4ff;
+  font-family: 'VT323', ui-monospace, monospace;
+  font-size: 18px;
+  line-height: 1.2;
+  user-select: none;
+  overflow-x: hidden;
+}
+
+.font-heading {
+  font-family: 'Press Start 2P', monospace;
+  letter-spacing: 0.02em;
+  line-height: 1.35;
+}
+
+.font-num {
+  font-family: 'VT323', ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Stepped pixel text shadow (1px ink outline look) */
+.pixel-text-outline {
+  text-shadow:
+    1px 0 0 #1a1228,
+    -1px 0 0 #1a1228,
+    0 1px 0 #1a1228,
+    0 -1px 0 #1a1228,
+    2px 2px 0 #1a1228;
+}
+
+/* 9-slice UI panels using the asset pack PNGs */
+.panel-navy {
+  border-style: solid;
+  border-width: 8px;
+  border-image-source: url('/assets/ui/panel_navy.png');
+  border-image-slice: 8 fill;
+  border-image-repeat: stretch;
+  image-rendering: pixelated;
+}
+
+.panel-wood {
+  border-style: solid;
+  border-width: 8px;
+  border-image-source: url('/assets/ui/panel_wood.png');
+  border-image-slice: 8 fill;
+  border-image-repeat: stretch;
+  image-rendering: pixelated;
+}
+
+.panel-green {
+  border-style: solid;
+  border-width: 8px;
+  border-image-source: url('/assets/ui/panel_green.png');
+  border-image-slice: 8 fill;
+  border-image-repeat: stretch;
+  image-rendering: pixelated;
+}
+
+/* 9-slice pixel buttons */
+.btn-pixel {
+  border-style: solid;
+  border-width: 6px;
+  border-image-source: url('/assets/ui/button_normal.png');
+  border-image-slice: 6 fill;
+  border-image-repeat: stretch;
+  image-rendering: pixelated;
+  cursor: pointer;
+  color: #f4f8ff;
+  text-shadow: 1px 1px 0 #1a1228;
+  transition: none;
+}
+
+.btn-pixel:hover:not(:disabled) {
+  filter: brightness(1.12);
+}
+
+.btn-pixel:active:not(:disabled),
+.btn-pixel.is-pressed {
+  border-image-source: url('/assets/ui/button_pressed.png');
+  transform: translateY(1px);
+}
+
+.btn-pixel:disabled {
+  border-image-source: url('/assets/ui/button_disabled.png');
+  color: #7d8594;
+  cursor: not-allowed;
+}
+
+/* 9-slice rarity item slots */
+.slot-common {
+  border-style: solid;
+  border-width: 4px;
+  border-image: url('/assets/ui/slot_common.png') 4 fill stretch;
+}
+.slot-uncommon {
+  border-style: solid;
+  border-width: 4px;
+  border-image: url('/assets/ui/slot_uncommon.png') 4 fill stretch;
+}
+.slot-rare {
+  border-style: solid;
+  border-width: 4px;
+  border-image: url('/assets/ui/slot_rare.png') 4 fill stretch;
+}
+.slot-epic {
+  border-style: solid;
+  border-width: 4px;
+  border-image: url('/assets/ui/slot_epic.png') 4 fill stretch;
+}
+.slot-legendary {
+  border-style: solid;
+  border-width: 4px;
+  border-image: url('/assets/ui/slot_legendary.png') 4 fill stretch;
+}
+.slot-mythic {
+  border-style: solid;
+  border-width: 4px;
+  border-image: url('/assets/ui/slot_mythic.png') 4 fill stretch;
+}
+
+/* Chunky inset sub-box matching #1a1228 outline */
+.pixel-box {
+  background-color: #11192c;
+  border: 2px solid #1a1228;
+  box-shadow: inset 0 0 0 2px #26395c;
+}
+
+/* Stepped pixel dither overlay pattern */
+.dither-bg {
+  background-image: radial-gradient(#1a1228 1px, transparent 0);
+  background-size: 4px 4px;
+}
+
+/* Keyboard focus accessibility */
+button:focus-visible,
+input:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px dashed #f2c02a;
+  outline-offset: 2px;
+}
+
+/* Mutation visual animations (stepped) */
+@keyframes prismatic-cycle {
+  0% { filter: hue-rotate(0deg) saturate(2) brightness(1.15); }
+  100% { filter: hue-rotate(360deg) saturate(2) brightness(1.15); }
+}
+
+@keyframes sprite-strip {
+  from { background-position-x: 0px; }
+  to { background-position-x: var(--strip-w, -64px); }
+}
+
+@keyframes glitch-jitter {
+  0% { transform: translate(0, 0); filter: drop-shadow(-2px 0 0 #ff2a6d) drop-shadow(2px 0 0 #05d9e8); }
+  25% { transform: translate(-1px, 1px); filter: drop-shadow(2px 0 0 #ff2a6d) drop-shadow(-2px 0 0 #05d9e8); }
+  50% { transform: translate(1px, -1px); filter: drop-shadow(-1px -1px 0 #ff2a6d) drop-shadow(1px 1px 0 #05d9e8); }
+  75% { transform: translate(1px, 1px); filter: drop-shadow(1px -2px 0 #ff2a6d) drop-shadow(-1px 2px 0 #05d9e8); }
+  100% { transform: translate(0, 0); filter: drop-shadow(-2px 0 0 #ff2a6d) drop-shadow(2px 0 0 #05d9e8); }
+}
+
+@keyframes wisp-float {
+  0% { transform: translateY(0); opacity: 0.9; }
+  50% { transform: translateY(-4px); opacity: 1; }
+  100% { transform: translateY(-8px); opacity: 0.2; }
+}
+
+@keyframes screen-shake {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-3px, 2px); }
+  40% { transform: translate(3px, -2px); }
+  60% { transform: translate(-2px, -3px); }
+  80% { transform: translate(2px, 3px); }
+}
+
+.mut-prismatic {
+  animation: prismatic-cycle 1.6s steps(8) infinite;
+}
+
+.mut-glitched {
+  animation: glitch-jitter 0.35s steps(4) infinite;
+}
+
+.shake-active {
+  animation: screen-shake 0.35s steps(4);
+}
+
+/* Respect reduced motion toggle */
+.reduced-motion .mut-prismatic,
+.reduced-motion .mut-glitched,
+.reduced-motion .shake-active {
+  animation: none !important;
+}
+
+/* Custom chunky pixel scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #111827;
+  border-left: 2px solid #1a1228;
+}
+::-webkit-scrollbar-thumb {
+  background: #3b5584;
+  border: 2px solid #1a1228;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #5274b0;
+}
