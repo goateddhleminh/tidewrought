@@ -41,7 +41,7 @@ const RIGHT_TABS: { id: RightTab; label: string; icon: string }[] = [
   { id: 'skills', label: 'Skills', icon: 'xp_star' },
   { id: 'prestige', label: 'Prestige', icon: 'offline' },
   { id: 'achievements', label: 'Feats', icon: 'luck' },
-  { id: 'settings', label: 'Config', icon: 'hook' },
+  { id: 'settings', label: 'Settings', icon: 'hook' },
 ];
 
 const TUTORIAL_STEPS = [
@@ -144,6 +144,25 @@ function GameShell() {
             <Sprite group="items" name="cursed_shard" scale={1} /> {fmtInt(s.shards)}
           </span>
           <span className="text-xs text-[#9ad8ff] font-bold">Lv.{s.level}</span>
+          <button
+            type="button"
+            onClick={actions.manualSave}
+            className="btn-pixel px-2 py-0.5 text-xs font-bold text-[#58b84a]"
+            title="Manually save your game progress right now"
+          >
+            💾 Save
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setRightTab('settings');
+              setMobileView('tabs');
+            }}
+            className="btn-pixel px-2 py-0.5 text-xs font-bold text-[#f2c02a]"
+            title="Open Audio, Save & Performance Settings"
+          >
+            ⚙ Settings
+          </button>
         </div>
       </header>
 

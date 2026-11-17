@@ -130,9 +130,13 @@ export function Scene() {
   // Listen to transient FX events
   useEffect(() => {
     const pushParticles = (x: number, y: number, color: string, count: number) => {
+      const pMode = getState().settings.particles;
+      if (pMode === 'off') return;
+      const cap = pMode === 'low' ? 18 : BALANCE.maxParticles;
+      const actualCount = pMode === 'low' ? Math.max(2, Math.floor(count * 0.4)) : count;
       const list = particlesRef.current;
-      for (let i = 0; i < count && list.length < BALANCE.maxParticles; i++) {
-        const angle = (Math.PI * 2 * i) / count + (i % 3) * 0.2;
+      for (let i = 0; i < actualCount && list.length < cap; i++) {
+        const angle = (Math.PI * 2 * i) / actualCount + (i % 3) * 0.2;
         const spd = 16 + (i % 5) * 9;
         list.push({
           x,
@@ -181,6 +185,7 @@ export function Scene() {
         setGradeBanner({ text: 'TOO EARLY!', color: '#e85a5a' });
         setTimeout(() => setGradeBanner(null), 750);
       } else if (e.type === 'float') {
+        if (!getState().settings.floatingText) return;
         const id = Date.now() + Math.floor(performance.now() * 100);
         setFloats((prev) => [...prev.slice(-8), { id, text: e.text, color: e.color, x: 52, y: 30, big: e.big }]);
         setTimeout(() => setFloats((prev) => prev.filter((f) => f.id !== id)), 1100);
@@ -189,7 +194,8 @@ export function Scene() {
         pushParticles(96, 54, '#ff5ac8', 28);
         setTimeout(() => setJackpotBanner(false), 2200);
       } else if (e.type === 'shake') {
-        if (!getState().settings.reducedMotion) {
+        const cfg = getState().settings;
+        if (cfg.screenShake && !cfg.reducedMotion) {
           setShake(true);
           setTimeout(() => setShake(false), 380);
         }
@@ -205,6 +211,12 @@ export function Scene() {
     let last = performance.now();
 
     const render = (now: number) => {
+      const targetFps = getState().settings.targetFps || 60;
+      const minFrameMs = targetFps >= 60 ? 0 : 1000 / targetFps;
+      if (minFrameMs > 0 && now - last < minFrameMs) {
+        raf = requestAnimationFrame(render);
+        return;
+      }
       const dt = Math.min(0.1, (now - last) / 1000);
       last = now;
       const canvas = canvasRef.current;
@@ -236,6 +248,7 @@ export function Scene() {
     const drawScene = (ctx: CanvasRenderingContext2D, tSec: number, dt: number) => {
       const state = getState();
       const reduced = state.settings.reducedMotion;
+      const weatherFx = state.settings.weatherEffects;
       const animT = reduced ? 0 : tSec;
 
       ctx.clearRect(0, 0, SCENE_W, SCENE_H);
@@ -245,7 +258,7 @@ export function Scene() {
       drawSpriteFrame(ctx, 'backgrounds', bgKey, 0, 0, 0);
 
       // Drifting pixel clouds (zones 1..3)
-      if (state.zone <= 3) {
+      if (weatherFx && state.zone <= 3) {
         const c1x = Math.floor(((animT * 3.5) % (SCENE_W + 64)) - 56);
         const c2x = Math.floor((((animT * 2.2) + 95) % (SCENE_W + 52)) - 44);
         drawSpriteFrame(ctx, 'effects', 'cloud_1', c1x, 8, 0);
@@ -253,12 +266,14 @@ export function Scene() {
       }
 
       // Parallax water shimmer lines below horizon (y=62..108)
-      const zd = zoneDef(state.zone);
-      ctx.fillStyle = zd.water;
-      for (let row = 0; row < 6; row++) {
-        const wy = 66 + row * 7;
-        const wx = Math.floor(((animT * (4 + row * 1.5) + row * 29) % 180) - 10);
-        ctx.fillRect(wx, wy, 10 - (row % 3) * 2, 1);
+      if (weatherFx) {
+        const zd = zoneDef(state.zone);
+        ctx.fillStyle = zd.water;
+        for (let row = 0; row < 6; row++) {
+          const wy = 66 + row * 7;
+          const wx = Math.floor(((animT * (4 + row * 1.5) + row * 29) % 180) - 10);
+          ctx.fillRect(wx, wy, 10 - (row % 3) * 2, 1);
+        }
       }
 
       // 2. Day/Night & Weather overlay (back of dock)
@@ -270,13 +285,13 @@ export function Scene() {
 
       const wId = state.weather.current;
       const wDef = WEATHER[wId];
-      if (wDef.tint) {
+      if (weatherFx && wDef.tint) {
         ctx.fillStyle = wDef.tint;
         ctx.fillRect(0, 0, SCENE_W, SCENE_H);
       }
 
       // Aurora ribbons
-      if (wId === 'aurora') {
+      if (weatherFx && wId === 'aurora') {
         for (let x = 0; x < SCENE_W; x += 4) {
           const ay = 12 + Math.round(Math.sin(x * 0.08 + animT * 2) * 5);
           ctx.fillStyle = x % 8 === 0 ? 'rgba(88, 248, 184, 0.35)' : 'rgba(164, 90, 240, 0.3)';
@@ -285,7 +300,7 @@ export function Scene() {
       }
 
       // Blood Moon orb tint in sky
-      if (wId === 'bloodmoon') {
+      if (weatherFx && wId === 'bloodmoon') {
         ctx.fillStyle = 'rgba(232, 45, 68, 0.55)';
         ctx.fillRect(142, 12, 14, 14);
         ctx.fillStyle = 'rgba(255, 120, 120, 0.35)';
@@ -293,7 +308,7 @@ export function Scene() {
       }
 
       // Meteor shower streaks
-      if (wId === 'meteor' && !reduced) {
+      if (weatherFx && wId === 'meteor' && !reduced) {
         if (meteorsRef.current.length < 4 && Math.floor(tSec * 10) % 7 === 0) {
           meteorsRef.current.push({
             x: 30 + ((Math.floor(tSec * 53) * 29) % 140),
@@ -425,7 +440,7 @@ export function Scene() {
       }
 
       // Rain / Storm raindrops (effects/raindrop.png)
-      if (wId === 'rain' || wId === 'storm') {
+      if (weatherFx && (wId === 'rain' || wId === 'storm')) {
         const count = wId === 'storm' ? raindropsRef.current.length : 16;
         for (let i = 0; i < count; i++) {
           const r = raindropsRef.current[i];
@@ -442,7 +457,7 @@ export function Scene() {
       }
 
       // Fog bands
-      if (wId === 'fog') {
+      if (weatherFx && wId === 'fog') {
         ctx.fillStyle = 'rgba(218, 228, 240, 0.25)';
         const off = Math.round(Math.sin(animT * 0.9) * 6);
         ctx.fillRect(0, 48 + off, SCENE_W, 8);

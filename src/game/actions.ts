@@ -17,6 +17,7 @@ import {
 import { fmt, safe } from './format';
 import { chance, logUniform, pick, rand, randInt, weightedPick } from './rng';
 import { sfx } from './sound';
+import { saveGame } from './save';
 import { emit, fx, store } from './state';
 import {
   CHEST_TIERS, rarityIndex, type AutoSellConfig, type BaitId, type CatchResult, type ChestTier, type EventId,
@@ -28,6 +29,17 @@ function markBaitDiscovered(s: GameState, id: BaitId) {
   if (!s.discoveredBaits.includes(id)) {
     s.discoveredBaits = [...s.discoveredBaits, id];
   }
+}
+
+let lastAutoSaveAt = 0;
+/** Save immediately (throttled to 1.5s during rapid clicks) whenever progress changes if autoSaveEnabled is true. */
+export function autoSaveProgress(force = false) {
+  const s = store.state;
+  if (!force && !s.settings.autoSaveEnabled) return;
+  const now = Date.now();
+  if (!force && now - lastAutoSaveAt < 1500) return;
+  lastAutoSaveAt = now;
+  saveGame();
 }
 
 function pushLog(s: GameState, entry: Omit<LogEntry, 'id' | 't'>) {
@@ -452,6 +464,7 @@ function finishCatchCycle(s: GameState, st: Stats) {
   };
 
   checkAchievements(s);
+  autoSaveProgress();
 }
 
 // ---------- Main fixed-timestep tick ----------
@@ -633,6 +646,7 @@ function resolveBossVictory(s: GameState, st: Stats) {
   sfx.jackpot();
   fx.emit({ type: 'bossEnd', won: true, name });
   checkAchievements(s);
+  autoSaveProgress();
 }
 
 // ---------- Player-initiated actions ----------
@@ -1276,6 +1290,22 @@ export const actions = {
   updateSettings(patch: Partial<Settings>) {
     sfx.unlock();
     store.state.settings = { ...store.state.settings, ...patch };
+    sfx.syncMusic();
+    saveGame();
+    emit();
+  },
+
+  manualSave() {
+    sfx.unlock();
+    sfx.click();
+    saveGame();
+    fx.emit({
+      type: 'toast',
+      title: 'Game Saved!',
+      text: `Progress saved at ${new Date().toLocaleTimeString()}.`,
+      color: '#58b84a',
+      icon: 'icon:achievement',
+    });
     emit();
   },
 

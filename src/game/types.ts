@@ -168,7 +168,23 @@ export interface GameStats {
 export interface Settings {
   volume: number;
   muted: boolean;
+  /** Ambient chiptune dock music toggle & volume */
+  musicEnabled: boolean;
+  musicVolume: number;
+  /** Cast, bite, splash, reel, and fish catch sounds */
+  fishSounds: boolean;
+  /** Button clicks, coins, chest, and UI sounds */
+  uiSounds: boolean;
+  /** Performance & visual optimization settings */
+  targetFps: 60 | 30 | 15;
+  particles: 'high' | 'low' | 'off';
+  weatherEffects: boolean;
+  floatingText: boolean;
+  screenShake: boolean;
   reducedMotion: boolean;
+  /** Auto-save settings */
+  autoSaveEnabled: boolean;
+  autoSaveIntervalSec: 5 | 10 | 30;
   logFilter: 'all' | 'rare' | 'epic' | 'mutated';
   showTooltips: boolean;
 }
