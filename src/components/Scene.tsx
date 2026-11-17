@@ -3,7 +3,7 @@ import { actions } from '../game/actions';
 import {
   INK, ROD_KEYS, ZONE_BG_KEYS, asset, frameAt, frames, getImage,
 } from '../game/assets';
-import { BALANCE, RARITY_COLOR } from '../game/balance';
+import { BALANCE, RARITY_COLOR, RARITY_LABEL } from '../game/balance';
 import { cosmeticDef } from '../game/data/cosmetics';
 import { EVENTS, WEATHER } from '../game/data/events';
 import { fishInZone } from '../game/data/fish';
@@ -11,8 +11,8 @@ import { ZONES, zoneDef } from '../game/data/zones';
 import { computeStats, nightLevel, timeOfDay } from '../game/engine';
 import { fmt, fmtTime } from '../game/format';
 import { fx, getState, useTick } from '../game/state';
-import type { CatchResult, Pose } from '../game/types';
-import { FishSprite, Icon, MutationBadges, RarityBadge, Sprite, Tip } from './PixelUI';
+import { RARITIES, type CatchResult, type Pose } from '../game/types';
+import { FishSprite, Icon, MutationBadges, RARITY_SHAPE, RarityBadge, Sprite, Tip } from './PixelUI';
 
 const SCENE_W = 192;
 const SCENE_H = 108;
@@ -95,6 +95,8 @@ export function Scene() {
   const [jackpotBanner, setJackpotBanner] = useState(false);
   const [shake, setShake] = useState(false);
   const [gradeBanner, setGradeBanner] = useState<{ text: string; color: string } | null>(null);
+  const [choosingStartMode, setChoosingStartMode] = useState(false);
+  const [autoSellFilterOpen, setAutoSellFilterOpen] = useState(false);
 
   const particlesRef = useRef<Particle[]>([]);
   const animsRef = useRef<SpriteAnim[]>([]);
@@ -366,7 +368,7 @@ export function Scene() {
         bobY = 72;
       }
 
-      if (phase !== 'catch') {
+      if (state.fishing.started && phase !== 'catch') {
         const lineCos = cosmeticDef(state.cosmetics.line);
         const lineColor = lineCos?.value ?? '#e8eef8';
         const sag = phase === 'bite' || phase === 'reel' ? 2 : 7;
@@ -681,6 +683,68 @@ export function Scene() {
             </div>
           )}
 
+          {/* Start Fishing Overlay when not yet started */}
+          {!f.started && !s.boss && (
+            <div className="absolute inset-0 flex items-center justify-center bg-[#080510]/65 p-3">
+              {!choosingStartMode ? (
+                <div className="panel-navy p-4 text-center flex flex-col items-center gap-2.5 max-w-xs">
+                  <div className="font-heading text-xs text-[#f2c02a]">READY ON THE DOCK</div>
+                  <div className="text-xs text-[#b8c7e0]">
+                    Click below to cast your line and choose how you want to fish.
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setChoosingStartMode(true)}
+                    className="btn-pixel px-5 py-2 font-heading text-xs text-[#58b84a] ring-2 ring-[#f2c02a]"
+                  >
+                    ▶ START FISHING
+                  </button>
+                </div>
+              ) : (
+                <div className="panel-navy p-3.5 text-center flex flex-col gap-2.5 max-w-md w-11/12">
+                  <div className="font-heading text-xs text-[#f2c02a]">CHOOSE FISHING MODE</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-left">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setChoosingStartMode(false);
+                        actions.startFishing('manual');
+                      }}
+                      className="btn-pixel p-2.5 flex flex-col gap-1"
+                    >
+                      <span className="font-heading text-xs text-[#f2c02a]">🎯 MANUAL FISHING</span>
+                      <span className="text-xs text-[#d6e4ff]">
+                        You must click <strong>REEL NOW!</strong> during the bite window to catch the fish (no auto-catch).
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setChoosingStartMode(false);
+                        actions.startFishing('auto');
+                      }}
+                      className="btn-pixel p-2.5 flex flex-col gap-1"
+                    >
+                      <span className="font-heading text-xs text-[#58b84a]">⚙ AUTO FISHING</span>
+                      <span className="text-xs text-[#d6e4ff]">
+                        Reels automatically! Randomized{' '}
+                        <strong className="text-[#fff6a8]">{Math.round(st.autoPerfectChance * 100)}% Perfect Reel</strong>{' '}
+                        chance (upgradeable with Coins in Shop).
+                      </span>
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setChoosingStartMode(false)}
+                    className="btn-pixel py-1 text-xs text-[#9aa8b8]"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Triple-mutation JACKPOT screen flash banner */}
           {jackpotBanner && (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-[#ff5ac8]/25 border-4 border-[#fff6a8]">
@@ -739,31 +803,90 @@ export function Scene() {
         </div>
       )}
 
-      {/* Reel! Control Bar + Bite Timing Gauge + Last Catch Card */}
+      {/* Reel! Control Bar + Mode Switcher + Bite Timing Gauge + Auto-Sell Filter + Last Catch Card */}
       <div className="panel-navy p-2.5 flex flex-col gap-2">
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={actions.reelClick}
-            className={`btn-pixel px-5 py-2 font-heading text-sm flex items-center gap-2 ${
-              isBite ? 'ring-2 ring-[#fff6a8] brightness-125' : ''
-            }`}
-          >
-            <Icon name="reel" scale={1} />
-            <span>{isBite ? 'REEL NOW!' : f.phase === 'wait' ? 'WAITING...' : f.phase.toUpperCase()}</span>
-          </button>
+          {!f.started ? (
+            <button
+              type="button"
+              onClick={() => setChoosingStartMode(true)}
+              className="btn-pixel px-5 py-2 font-heading text-sm flex items-center gap-2 text-[#58b84a] ring-2 ring-[#f2c02a]"
+            >
+              <Icon name="reel" scale={1} />
+              <span>▶ START FISHING</span>
+            </button>
+          ) : (
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={actions.reelClick}
+                className={`btn-pixel px-4 py-2 font-heading text-sm flex items-center gap-2 ${
+                  isBite ? 'ring-2 ring-[#fff6a8] brightness-125' : ''
+                }`}
+              >
+                <Icon name="reel" scale={1} />
+                <span>{isBite ? 'REEL NOW!' : f.phase === 'wait' ? 'WAITING...' : f.phase.toUpperCase()}</span>
+              </button>
+              <Tip label="Stop fishing and rest on the dock">
+                <button
+                  type="button"
+                  onClick={actions.stopFishing}
+                  className="btn-pixel px-2.5 py-2 text-xs font-bold text-[#ff8a8a]"
+                >
+                  ⏹ Stop
+                </button>
+              </Tip>
+            </div>
+          )}
+
+          {/* Live Manual / Auto Fishing Mode Switcher */}
+          <div className="pixel-box p-1 flex items-center gap-1">
+            <Tip label="Manual Mode: You must click REEL NOW! when a fish bites or it gets away.">
+              <button
+                type="button"
+                onClick={() => (f.started ? actions.setFishingMode('manual') : actions.startFishing('manual'))}
+                className={`btn-pixel px-2.5 py-1 text-xs font-bold ${
+                  f.started && f.mode === 'manual' ? 'is-pressed text-[#f2c02a] ring-1 ring-[#f2c02a]' : ''
+                }`}
+              >
+                🎯 Manual
+              </button>
+            </Tip>
+            <Tip
+              label={`Automatic Mode: Auto-reels catches with a ${Math.round(
+                st.autoPerfectChance * 100,
+              )}% chance of a Perfect Reel. Upgrade "Clockwork Auto-Reeler" in the Shop to raise Perfect chance!`}
+            >
+              <button
+                type="button"
+                onClick={() => (f.started ? actions.setFishingMode('auto') : actions.startFishing('auto'))}
+                className={`btn-pixel px-2.5 py-1 text-xs font-bold ${
+                  f.started && f.mode === 'auto' ? 'is-pressed text-[#58b84a] ring-1 ring-[#58b84a]' : ''
+                }`}
+              >
+                ⚙ Auto ({Math.round(st.autoPerfectChance * 100)}% Perf)
+              </button>
+            </Tip>
+          </div>
 
           {/* Timing Bar */}
           <div className="flex-1 min-w-44">
             <div className="flex justify-between text-xs text-[#b8c7e0] mb-0.5">
               <span>
-                Phase: <strong className="uppercase text-[#fff6a8]">{f.phase}</strong>
+                {!f.started ? (
+                  <strong className="text-[#9aa8b8]">IDLE ON DOCK</strong>
+                ) : (
+                  <>
+                    Phase: <strong className="uppercase text-[#fff6a8]">{f.phase}</strong> (
+                    {f.mode === 'manual' ? 'Manual' : 'Auto'})
+                  </>
+                )}
                 {s.perfectCombo > 0 && (
                   <span className="ml-2 text-[#58b84a]">Perfect Combo x{s.perfectCombo}</span>
                 )}
               </span>
               <span>
-                Idle Auto: {Math.round(st.idleEff * 100)}% • Perfect: x{st.perfectBonus.toFixed(2)}
+                Auto Perf: {Math.round(st.autoPerfectChance * 100)}% • Perfect: x{st.perfectBonus.toFixed(2)}
               </span>
             </div>
             <div className="relative w-full h-5 bg-[#100b1a] border-2 border-[#1a1228] overflow-hidden">
@@ -777,13 +900,13 @@ export function Scene() {
                 title="Perfect Reel Window"
               />
               {/* Bite cursor */}
-              {isBite && (
+              {f.started && isBite && (
                 <div
                   className="absolute top-0 bottom-0 w-1.5 bg-[#fff6a8]"
                   style={{ left: `${biteProgress * 100}%` }}
                 />
               )}
-              {!isBite && (
+              {f.started && !isBite && (
                 <div
                   className="h-full bg-[#3b66b0]"
                   style={{ width: `${Math.min(100, (f.t / Math.max(0.1, f.dur)) * 100)}%` }}
@@ -792,7 +915,7 @@ export function Scene() {
             </div>
           </div>
 
-          {/* Zone Boss Challenge & Auto-Sell Toggle */}
+          {/* Zone Boss Challenge & Auto-Sell Toggle + Filter Button */}
           <div className="flex items-center gap-1.5">
             <Tip
               label={
@@ -818,7 +941,7 @@ export function Scene() {
               </button>
             </Tip>
 
-            <Tip label="When ON, catches sell automatically. Toggle OFF to hold fish in your Inventory for manual full-price selling or Fate Altar rerolls.">
+            <Tip label="Toggle Auto-Sell ON/OFF. Fish matching your Auto-Sell Filter are sold automatically; all other fish are stored in your Inventory.">
               <button
                 type="button"
                 onClick={actions.toggleAutoSell}
@@ -829,8 +952,118 @@ export function Scene() {
                 Auto-Sell: {s.autoSell ? `ON (${Math.round(st.autoSellRate * 100)}%)` : 'OFF'}
               </button>
             </Tip>
+
+            <Tip label="Customize which fish Rarities, Mutations, and Sizes (cm) get auto-sold vs. kept in Inventory">
+              <button
+                type="button"
+                onClick={() => setAutoSellFilterOpen((v) => !v)}
+                className={`btn-pixel px-2.5 py-1.5 text-xs font-bold ${
+                  autoSellFilterOpen ? 'is-pressed text-[#f2c02a]' : 'text-[#9ad8ff]'
+                }`}
+              >
+                ⚙ Auto-Sell Filter
+              </button>
+            </Tip>
           </div>
         </div>
+
+        {/* Customizable Auto-Sell Filter Panel */}
+        {autoSellFilterOpen && (
+          <div className="pixel-box p-2.5 flex flex-col gap-2 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="font-heading text-[11px] text-[#f2c02a]">
+                CUSTOM AUTO-SELL FILTER (UNCHECKED FISH ARE KEPT IN INVENTORY)
+              </span>
+              <span className="text-[#9aa8b8]">
+                Inventory: {s.inventory.length}/{BALANCE.inventoryCap}
+              </span>
+            </div>
+
+            {/* Rarity toggles */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="font-bold text-[#b8c7e0] mr-1">Sell Rarities:</span>
+              {RARITIES.map((r) => {
+                const checked = s.autoSellConfig.rarities[r];
+                return (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => actions.toggleAutoSellRarity(r)}
+                    className={`btn-pixel px-2 py-0.5 text-xs font-bold flex items-center gap-1 ${
+                      checked ? 'is-pressed' : 'opacity-60'
+                    }`}
+                    style={{ color: RARITY_COLOR[r] }}
+                  >
+                    <span>{checked ? '☑' : '☐'}</span>
+                    <span>
+                      {RARITY_SHAPE[r]} {RARITY_LABEL[r]}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Size & Mutation filters */}
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-[#26395c]">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-bold text-[#b8c7e0]">Keep Mutated Fish:</span>
+                {(
+                  [
+                    [0, 'Sell Mutated Too'],
+                    [1, 'Keep Any Mutated (1+)'],
+                    [2, 'Keep 2+ Mutations'],
+                  ] as const
+                ).map(([val, label]) => (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => actions.updateAutoSellConfig({ keepMutationsAtLeast: val })}
+                    className={`btn-pixel px-2 py-0.5 text-xs ${
+                      s.autoSellConfig.keepMutationsAtLeast === val
+                        ? 'is-pressed text-[#f2c02a] font-bold'
+                        : ''
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <label className="flex items-center gap-1 text-[#b8c7e0]">
+                  <span>Min Size (cm):</span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={500}
+                    value={s.autoSellConfig.minSizeCm}
+                    onChange={(e) =>
+                      actions.updateAutoSellConfig({
+                        minSizeCm: Math.max(0, Number(e.target.value) || 0),
+                      })
+                    }
+                    className="w-14 px-1 py-0.5 bg-[#0b1020] border border-[#26395c] text-[#eef4ff] font-num text-center"
+                  />
+                </label>
+                <label className="flex items-center gap-1 text-[#b8c7e0]">
+                  <span>Max Size (cm, 0=any):</span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={500}
+                    value={s.autoSellConfig.maxSizeCm}
+                    onChange={(e) =>
+                      actions.updateAutoSellConfig({
+                        maxSizeCm: Math.max(0, Number(e.target.value) || 0),
+                      })
+                    }
+                    className="w-14 px-1 py-0.5 bg-[#0b1020] border border-[#26395c] text-[#eef4ff] font-num text-center"
+                  />
+                </label>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Last Catch Popup Card */}
         {lastCatch && lastCatch.fish && (

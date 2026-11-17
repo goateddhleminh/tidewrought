@@ -15,6 +15,18 @@ export type HelperId = 'cat' | 'pelican' | 'sailor' | 'mermaid';
 export type Phase = 'cast' | 'wait' | 'bite' | 'reel' | 'catch';
 export type ReelQuality = 'perfect' | 'good' | 'auto' | 'miss';
 export type Pose = 'idle' | 'cast' | 'reel' | 'cheer';
+export type FishingMode = 'manual' | 'auto';
+
+export interface AutoSellConfig {
+  /** Which rarities are allowed to be auto-sold */
+  rarities: Record<Rarity, boolean>;
+  /** Keep any fish that has at least this many mutations (0 = sell mutated too, 1 = keep any mutated, 2 = keep 2+ mutated) */
+  keepMutationsAtLeast: 0 | 1 | 2;
+  /** Minimum size (cm) to auto-sell (0 = no minimum) */
+  minSizeCm: number;
+  /** Maximum size (cm) to auto-sell (0 = no maximum; e.g. 50 = keep trophy fish > 50cm) */
+  maxSizeCm: number;
+}
 
 export interface FishDef {
   id: string;
@@ -112,6 +124,10 @@ export interface Seagull {
 }
 
 export interface FishingState {
+  /** False on game entry until the player clicks Start Fishing and picks a mode */
+  started: boolean;
+  /** 'manual' = player must reel during bite; 'auto' = auto-reels with upgradeable Perfect chance */
+  mode: FishingMode;
   phase: Phase;
   t: number;
   dur: number;
@@ -172,16 +188,25 @@ export interface GameState {
   zone: number;
   unlockedZone: number;
   rodTier: number;
+  /** Highest rod tier ever obtained across all runs (for the Codex) */
+  highestRodTier: number;
   upgrades: Record<string, number>;
   helpers: Record<HelperId, number>;
   skills: Record<string, number>;
   prestigeShop: Record<string, number>;
   bait: Record<BaitId, number>;
+  /** Bait IDs ever obtained by the player (for the Codex) */
+  discoveredBaits: BaitId[];
+  /** Helper IDs ever hired by the player (for the Codex) */
+  discoveredHelpers: HelperId[];
   equippedBait: BaitId | null;
   inventory: HeldFish[];
   autoSell: boolean;
+  autoSellConfig: AutoSellConfig;
   chests: Record<ChestTier, number>;
   relics: RelicInstance[];
+  /** Relic IDs ever found by the player (for the Codex) */
+  discoveredRelics: string[];
   equippedRelics: number[];
   codex: Record<string, CodexEntry>;
   claimedMilestones: string[];

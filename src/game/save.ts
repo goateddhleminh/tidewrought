@@ -27,15 +27,44 @@ export function migrateSave(raw: unknown): GameState {
   if (!raw || typeof raw !== 'object') return fresh;
   const src = raw as Partial<GameState>;
 
+  const mergedHelpers = { ...fresh.helpers, ...(src.helpers ?? {}) };
+  const mergedBait = { ...fresh.bait, ...(src.bait ?? {}) };
+  const mergedRelics = Array.isArray(src.relics) ? src.relics : [];
+
+  const discBaits = new Set<import('./types').BaitId>(['worm', ...(src.discoveredBaits ?? [])]);
+  for (const [k, v] of Object.entries(mergedBait)) {
+    if (v > 0) discBaits.add(k as import('./types').BaitId);
+  }
+  const discHelpers = new Set<import('./types').HelperId>(src.discoveredHelpers ?? []);
+  for (const [k, v] of Object.entries(mergedHelpers)) {
+    if (v > 0) discHelpers.add(k as import('./types').HelperId);
+  }
+  const discRelics = new Set<string>([
+    ...(src.discoveredRelics ?? []),
+    ...mergedRelics.map((r) => r.id),
+  ]);
+
   const merged: GameState = {
     ...fresh,
     ...src,
     version: SAVE_VERSION,
+    highestRodTier: Math.max(fresh.highestRodTier, src.highestRodTier ?? 1, src.rodTier ?? 1),
     upgrades: { ...fresh.upgrades, ...(src.upgrades ?? {}) },
-    helpers: { ...fresh.helpers, ...(src.helpers ?? {}) },
+    helpers: mergedHelpers,
     skills: { ...fresh.skills, ...(src.skills ?? {}) },
     prestigeShop: { ...fresh.prestigeShop, ...(src.prestigeShop ?? {}) },
-    bait: { ...fresh.bait, ...(src.bait ?? {}) },
+    bait: mergedBait,
+    discoveredBaits: Array.from(discBaits),
+    discoveredHelpers: Array.from(discHelpers),
+    discoveredRelics: Array.from(discRelics),
+    autoSellConfig: {
+      ...fresh.autoSellConfig,
+      ...(src.autoSellConfig ?? {}),
+      rarities: {
+        ...fresh.autoSellConfig.rarities,
+        ...(src.autoSellConfig?.rarities ?? {}),
+      },
+    },
     chests: { ...fresh.chests, ...(src.chests ?? {}) },
     codex: { ...(src.codex ?? {}) },
     achievements: { ...(src.achievements ?? {}) },
@@ -56,14 +85,20 @@ export function migrateSave(raw: unknown): GameState {
       expected: { ...fresh.stats.expected, ...(src.stats?.expected ?? {}) },
       weatherSeen: Array.from(new Set([...fresh.stats.weatherSeen, ...(src.stats?.weatherSeen ?? [])])),
     },
-    fishing: fresh.fishing,
+    // Never auto-start fishing on enter/load; wait for the player to click Start Fishing
+    fishing: {
+      ...fresh.fishing,
+      started: false,
+      mode: src.fishing?.mode ?? 'auto',
+      pose: 'idle',
+    },
     boss: null,
     event: null,
     seagull: null,
     merchant: [],
     log: Array.isArray(src.log) ? src.log.slice(0, BALANCE.maxLog) : [],
     inventory: Array.isArray(src.inventory) ? src.inventory.slice(0, BALANCE.inventoryCap) : [],
-    relics: Array.isArray(src.relics) ? src.relics : [],
+    relics: mergedRelics,
     equippedRelics: Array.isArray(src.equippedRelics) ? src.equippedRelics : [],
     claimedMilestones: Array.isArray(src.claimedMilestones) ? src.claimedMilestones : [],
   };

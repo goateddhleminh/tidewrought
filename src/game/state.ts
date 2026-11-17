@@ -3,7 +3,7 @@ import { BALANCE } from './balance';
 import type { GameState, MutationId, Rarity } from './types';
 import { MUTATIONS, RARITIES } from './types';
 
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 
 const zeroRarity = () => Object.fromEntries(RARITIES.map((r) => [r, 0])) as Record<Rarity, number>;
 const zeroMut = () => Object.fromEntries(MUTATIONS.map((m) => [m, 0])) as Record<MutationId, number>;
@@ -25,23 +25,51 @@ export function createInitialState(): GameState {
     zone: 1,
     unlockedZone: 1,
     rodTier: 1,
+    highestRodTier: 1,
     upgrades: {},
     helpers: { cat: 0, pelican: 0, sailor: 0, mermaid: 0 },
     skills: {},
     prestigeShop: {},
     bait: { worm: 10, glowgrub: 0, chaos: 0, golden: 0, gambler: 0 },
+    discoveredBaits: ['worm'],
+    discoveredHelpers: [],
     equippedBait: null,
     inventory: [],
     autoSell: true,
+    autoSellConfig: {
+      rarities: {
+        common: true,
+        uncommon: true,
+        rare: true,
+        epic: false,
+        legendary: false,
+        mythic: false,
+      },
+      keepMutationsAtLeast: 1,
+      minSizeCm: 0,
+      maxSizeCm: 0,
+    },
     chests: { wood: 0, silver: 0, gold: 0, cosmic: 0 },
     relics: [],
+    discoveredRelics: [],
     equippedRelics: [],
     codex: {},
     claimedMilestones: [],
     achievements: {},
     bossDefeated: {},
     bossCooldown: 0,
-    fishing: { phase: 'cast', t: 0, dur: BALANCE.castTime, quality: null, biteElapsed: 0, pose: 'cast', poseT: 0, lastClickAt: -99 },
+    fishing: {
+      started: false,
+      mode: 'auto',
+      phase: 'cast',
+      t: 0,
+      dur: BALANCE.castTime,
+      quality: null,
+      biteElapsed: 0,
+      pose: 'idle',
+      poseT: 0,
+      lastClickAt: -99,
+    },
     weather: { current: 'clear', timeLeft: BALANCE.weatherSlotSec, queue: [] },
     clock: BALANCE.dayCycleSec * 0.15,
     event: null,

@@ -87,6 +87,7 @@ export interface Stats {
   perfectWindow: [number, number];
   perfectBonus: number;
   idleEff: number;
+  autoPerfectChance: number;
   crit: number;
   chest: number;
   mutGlobal: number;
@@ -194,7 +195,8 @@ export function computeStats(s: GameState): Stats {
   const [pa, pb] = BALANCE.perfectWindow;
   const perfectWindow: [number, number] = [pa, Math.min(BALANCE.biteWindow - 0.1, pa + (pb - pa) * pwScale)];
   const perfectBonus = BALANCE.qualityMult.perfect + lvl(sk, 'powerReel') * 0.1 + (rel.perfectValue ?? 0) / 100;
-  const idleEff = lvl(sk, 'zen') ? 1 : Math.min(1, BALANCE.qualityMult.auto + lvl(sk, 'autoReel') * 0.07);
+  const idleEff = lvl(sk, 'zen') ? 1 : Math.min(1, BALANCE.qualityMult.auto + lvl(sk, 'autoReel') * 0.07 + lvl(up, 'autoPerfect') * 0.01);
+  const autoPerfectChance = Math.min(0.95, BALANCE.autoPerfectBase + lvl(up, 'autoPerfect') * 0.02 + lvl(sk, 'autoReel') * 0.02);
 
   // ---- crit / chest ----
   const crit = Math.min(0.5, BALANCE.critDoubleBase + lvl(up, 'hook') * 0.0015 + lvl(sk, 'critInstinct') * 0.01 + (rel.crit ?? 0) / 100 + (rel.double ?? 0) / 100);
@@ -248,7 +250,7 @@ export function computeStats(s: GameState): Stats {
   return {
     luck, luckParts, luckMult, valueMult, biteSpeed, waitTime, castTime, reelTime,
     biteWindow: BALANCE.biteWindow,
-    perfectWindow, perfectBonus, idleEff, crit, chest, mutGlobal, mutChance, rareWeightMult,
+    perfectWindow, perfectBonus, idleEff, autoPerfectChance, crit, chest, mutGlobal, mutChance, rareWeightMult,
     xpMult: 1 + ach.xp / 100 + (rel.xp ?? 0) / 100,
     autoSellRate, baitSave, clickDamage,
     offlineCapH: BALANCE.offlineCapHours + lvl(hp, 'sailor') + lvl(sk, 'deepSleep'),
@@ -483,3 +485,15 @@ export function pearlsForReset(s: GameState): number {
 export function xpToNext(level: number) {
   return BALANCE.xpForLevel(level);
 }
+
+/** Check whether a caught fish matches the player's custom Auto-Sell rules. */
+export function shouldAutoSell(s: GameState, rarity: Rarity, mutations: MutationId[], size: number): boolean {
+  if (!s.autoSell) return false;
+  const cfg = s.autoSellConfig;
+  if (!cfg.rarities[rarity]) return false;
+  if (cfg.keepMutationsAtLeast > 0 && mutations.length >= cfg.keepMutationsAtLeast) return false;
+  if (cfg.minSizeCm > 0 && size < cfg.minSizeCm) return false;
+  if (cfg.maxSizeCm > 0 && size > cfg.maxSizeCm) return false;
+  return true;
+}
+

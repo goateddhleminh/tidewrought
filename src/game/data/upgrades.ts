@@ -63,6 +63,7 @@ export interface UpgradeDef {
 }
 
 export const UPGRADES: UpgradeDef[] = [
+  { id: 'autoPerfect', name: 'Clockwork Auto-Reeler', icon: 'reel', base: 35, growth: 1.18, max: 45, desc: (l) => `Auto-Fishing Perfect Reel Chance: ${Math.min(95, 5 + l * 2)}% (+2%/lv) & Auto Efficiency +${l}%` },
   { id: 'reel', name: 'Spool Reel', icon: 'reel', base: 25, growth: 1.15, max: 200, desc: (l) => `Reel Strength +${l * 8}% (faster reel, boss damage), Cast Speed +${l * 2}%` },
   { id: 'line', name: 'Braided Line', icon: 'speed', base: 40, growth: 1.16, max: 200, desc: (l) => `Bite Speed +${l * 4}%` },
   { id: 'hook', name: 'Barbed Hook', icon: 'hook', base: 60, growth: 1.18, max: 100, desc: (l) => `Crit Chance +${(l * 0.15).toFixed(2)}%, Luck +${l}` },

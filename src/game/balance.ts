@@ -48,6 +48,8 @@ export const BALANCE = {
   /** Reel quality value multipliers. Idle auto reel ~60% of active. */
   qualityMult: { perfect: 1.25, good: 1.0, auto: 0.6, miss: 0 },
   perfectLuckBonus: 25,
+  /** Base chance for Automatic Fishing to roll a randomized Perfect Reel. */
+  autoPerfectBase: 0.05,
 
   critDoubleBase: 0.05,
   chestBase: 0.01,
@@ -71,7 +73,7 @@ export const BALANCE = {
   /** Selling. */
   manualSellRate: 1.0,
   autoSellRate: 0.8,
-  inventoryCap: 60,
+  inventoryCap: 150,
 
   /** Offline progress. */
   offlineCapHours: 8,

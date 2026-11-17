@@ -12,17 +12,23 @@ import {
 import { ZONES, zoneDef } from './data/zones';
 import {
   computeStats, expectedCatchValue, lvl, mutationMultiplier, pearlsForReset, relicSlots, rollCatch, rollChestTier,
-  rollMutations, xpToNext, type Stats,
+  rollMutations, shouldAutoSell, xpToNext, type Stats,
 } from './engine';
 import { fmt, safe } from './format';
 import { chance, logUniform, pick, rand, randInt, weightedPick } from './rng';
 import { sfx } from './sound';
 import { emit, fx, store } from './state';
 import {
-  CHEST_TIERS, rarityIndex, type BaitId, type CatchResult, type ChestTier, type EventId,
-  type GameState, type HeldFish, type HelperId, type LogEntry, type MerchantDeal, type ReelQuality,
-  type Settings, type WeatherSlot,
+  CHEST_TIERS, rarityIndex, type AutoSellConfig, type BaitId, type CatchResult, type ChestTier, type EventId,
+  type FishingMode, type GameState, type HeldFish, type HelperId, type LogEntry, type MerchantDeal, type Rarity,
+  type ReelQuality, type Settings, type WeatherSlot,
 } from './types';
+
+function markBaitDiscovered(s: GameState, id: BaitId) {
+  if (!s.discoveredBaits.includes(id)) {
+    s.discoveredBaits = [...s.discoveredBaits, id];
+  }
+}
 
 function pushLog(s: GameState, entry: Omit<LogEntry, 'id' | 't'>) {
   const next: LogEntry = { ...entry, id: s.nextUid++, t: Date.now() };
@@ -291,8 +297,9 @@ function applySingleCatch(s: GameState, st: Stats, res: CatchResult, isSecond = 
     };
   }
 
-  // Sell or store in inventory
+  // Sell or store in inventory based on custom Auto-Sell Filter
   let coinsEarned = 0;
+  let storedInInventory = false;
   const held: HeldFish = {
     uid: s.nextUid++,
     fishId: fish.id,
@@ -302,11 +309,13 @@ function applySingleCatch(s: GameState, st: Stats, res: CatchResult, isSecond = 
     size: res.size,
   };
 
-  if (s.autoSell) {
+  const canAutoSellThis = shouldAutoSell(s, res.rarity, res.mutations, res.size);
+  if (canAutoSellThis) {
     coinsEarned = res.value * st.autoSellRate;
     addCoins(s, coinsEarned);
   } else if (s.inventory.length < BALANCE.inventoryCap) {
     s.inventory = [held, ...s.inventory];
+    storedInInventory = true;
   } else if (s.helpers.cat > 0) {
     coinsEarned = res.value * st.autoSellRate;
     addCoins(s, coinsEarned);
@@ -322,13 +331,14 @@ function applySingleCatch(s: GameState, st: Stats, res: CatchResult, isSecond = 
   }
 
   const mutText = res.mutations.length ? ` [${res.mutations.map((m) => m.toUpperCase()).join('+')}]` : '';
+  const storedTag = storedInInventory ? ' [KEPT IN INVENTORY]' : '';
   pushLog(s, {
     kind: 'fish',
     fishId: fish.id,
-    text: `${isSecond ? '(DOUBLE!) ' : ''}Caught ${fish.name}${mutText} (${res.size}cm)${res.forcedBy ? ` — ${res.forcedBy}` : ''}`,
+    text: `${isSecond ? '(DOUBLE!) ' : ''}Caught ${fish.name}${mutText} (${res.size}cm)${storedTag}${res.forcedBy ? ` — ${res.forcedBy}` : ''}`,
     rarity: res.rarity,
     mutations: res.mutations,
-    value: s.autoSell ? coinsEarned : res.value,
+    value: storedInInventory ? res.value : coinsEarned,
     quality: res.quality,
   });
 
@@ -395,6 +405,7 @@ function finishCatchCycle(s: GameState, st: Stats) {
   if (pelLvl > 0 && chance(Math.min(0.6, pelLvl * 0.04))) {
     const found = weightedPick(BAITS, (b) => b.findWeight);
     s.bait = { ...s.bait, [found.id]: s.bait[found.id] + 1 };
+    markBaitDiscovered(s, found.id);
   }
 
   const first = rollCatch(s, st, quality);
@@ -496,10 +507,17 @@ export function stepTick(dt: number) {
     }
   }
 
-  // Fishing state machine
+  // Fishing state machine (only runs after the user clicks Start Fishing)
   const f = s.fishing;
-  f.t += dt;
   f.poseT += dt;
+
+  if (!f.started) {
+    f.pose = 'idle';
+    emit();
+    return;
+  }
+
+  f.t += dt;
 
   if (f.phase === 'cast') {
     if (f.t >= f.dur) {
@@ -517,8 +535,42 @@ export function stepTick(dt: number) {
   } else if (f.phase === 'bite') {
     f.biteElapsed = f.t;
     if (f.t >= f.dur) {
-      // Auto-reel kicks in at end of bite window
-      s.fishing = { ...f, phase: 'reel', t: 0, dur: st.reelTime, quality: 'auto', pose: 'reel', poseT: 0 };
+      if (f.mode === 'manual') {
+        // In Manual mode, if the player didn't reel during the bite window, the fish escapes!
+        s.stats.miss++;
+        s.perfectCombo = 0;
+        s.streak = 0;
+        sfx.miss();
+        fx.emit({ type: 'miss' });
+        pushLog(s, {
+          kind: 'nothing',
+          fishId: null,
+          text: 'The fish got away! (Manual Mode: click REEL NOW! when it bites)',
+          rarity: 'common',
+          mutations: [],
+          value: 0,
+          quality: 'miss',
+        });
+        s.fishing = {
+          ...f,
+          phase: 'cast',
+          t: 0,
+          dur: st.castTime,
+          quality: null,
+          biteElapsed: 0,
+          pose: 'cast',
+          poseT: 0,
+        };
+      } else {
+        // In Automatic mode, auto-reels and rolls a randomized chance for a Perfect Reel!
+        const isAutoPerfect = chance(st.autoPerfectChance);
+        const autoQuality: ReelQuality = isAutoPerfect ? 'perfect' : 'auto';
+        if (isAutoPerfect) {
+          sfx.perfect();
+          fx.emit({ type: 'perfect', quality: 'perfect' });
+        }
+        s.fishing = { ...f, phase: 'reel', t: 0, dur: st.reelTime, quality: autoQuality, pose: 'reel', poseT: 0 };
+      }
     }
   } else if (f.phase === 'reel') {
     if (f.t >= f.dur) {
@@ -585,10 +637,59 @@ function resolveBossVictory(s: GameState, st: Stats) {
 
 // ---------- Player-initiated actions ----------
 export const actions = {
+  /** Start fishing in the chosen mode ('manual' or 'auto'). */
+  startFishing(mode: FishingMode) {
+    sfx.unlock();
+    sfx.cast();
+    const s = store.state;
+    const st = computeStats(s);
+    s.fishing = {
+      ...s.fishing,
+      started: true,
+      mode,
+      phase: 'cast',
+      t: 0,
+      dur: st.castTime,
+      quality: null,
+      biteElapsed: 0,
+      pose: 'cast',
+      poseT: 0,
+    };
+    emit();
+  },
+
+  /** Stop fishing and return character to dock idle state. */
+  stopFishing() {
+    sfx.unlock();
+    sfx.click();
+    const s = store.state;
+    s.fishing = {
+      ...s.fishing,
+      started: false,
+      phase: 'cast',
+      t: 0,
+      quality: null,
+      biteElapsed: 0,
+      pose: 'idle',
+      poseT: 0,
+    };
+    emit();
+  },
+
+  /** Switch between Manual and Automatic fishing modes at any time. */
+  setFishingMode(mode: FishingMode) {
+    sfx.unlock();
+    sfx.click();
+    const s = store.state;
+    s.fishing = { ...s.fishing, mode };
+    emit();
+  },
+
   /** Active click on the Reel! button or scene during bite/wait. */
   reelClick() {
     sfx.unlock();
     const s = store.state;
+    if (!s.fishing.started) return;
     const st = computeStats(s);
     const f = s.fishing;
 
@@ -667,6 +768,7 @@ export const actions = {
     addCoins(s, coins);
     const b = pick(['glowgrub', 'golden', 'chaos', 'gambler'] as BaitId[]);
     s.bait = { ...s.bait, [b]: s.bait[b] + 3 };
+    markBaitDiscovered(s, b);
     sfx.perfect();
     fx.emit({ type: 'seagull' });
     fx.emit({
@@ -684,6 +786,25 @@ export const actions = {
     sfx.unlock();
     sfx.click();
     store.state.autoSell = !store.state.autoSell;
+    emit();
+  },
+
+  updateAutoSellConfig(patch: Partial<AutoSellConfig>) {
+    sfx.unlock();
+    sfx.click();
+    const s = store.state;
+    s.autoSellConfig = { ...s.autoSellConfig, ...patch };
+    emit();
+  },
+
+  toggleAutoSellRarity(r: Rarity) {
+    sfx.unlock();
+    sfx.click();
+    const s = store.state;
+    s.autoSellConfig = {
+      ...s.autoSellConfig,
+      rarities: { ...s.autoSellConfig.rarities, [r]: !s.autoSellConfig.rarities[r] },
+    };
     emit();
   },
 
@@ -756,6 +877,7 @@ export const actions = {
     if (!rod || s.rodTier >= tier || s.coins < rod.cost) return;
     s.coins -= rod.cost;
     s.rodTier = tier;
+    s.highestRodTier = Math.max(s.highestRodTier ?? 1, tier);
     if (s.tutorialStep === 2) s.tutorialStep = 3;
     sfx.levelUp();
     checkAchievements(s);
@@ -776,6 +898,9 @@ export const actions = {
     if (s.coins < cost) return;
     s.coins -= cost;
     s.helpers = { ...s.helpers, [id]: cur + n };
+    if (!s.discoveredHelpers.includes(id)) {
+      s.discoveredHelpers = [...s.discoveredHelpers, id];
+    }
     sfx.coin();
     emit();
   },
@@ -811,6 +936,7 @@ export const actions = {
     if (s.coins < cost) return;
     s.coins -= cost;
     s.bait = { ...s.bait, [id]: s.bait[id] + count };
+    markBaitDiscovered(s, id);
     if (!s.equippedBait) s.equippedBait = id;
     sfx.coin();
     emit();
@@ -830,6 +956,7 @@ export const actions = {
       worm: s.bait.worm - worms,
       [id]: s.bait[id] + makes,
     };
+    markBaitDiscovered(s, id);
     if (!s.equippedBait) s.equippedBait = id;
     sfx.perfect();
     emit();
@@ -854,6 +981,7 @@ export const actions = {
     if (deal.kind === 'bait') {
       const k = deal.key as BaitId;
       s.bait = { ...s.bait, [k]: s.bait[k] + deal.amount };
+      markBaitDiscovered(s, k);
     } else if (deal.kind === 'chest') {
       const k = deal.key as ChestTier;
       s.chests = { ...s.chests, [k]: s.chests[k] + deal.amount };
@@ -882,6 +1010,7 @@ export const actions = {
     const b = pick(BAITS).id;
     const baitAmt = (tierIdx + 1) * randInt(2, 5);
     s.bait = { ...s.bait, [b]: s.bait[b] + baitAmt };
+    markBaitDiscovered(s, b);
 
     const shards = tierIdx >= 1 ? randInt(1, tierIdx * 2 + 1) : chance(0.35) ? 1 : 0;
     s.shards += shards;
@@ -903,6 +1032,9 @@ export const actions = {
       const chosen = pick(cands.length ? cands : RELICS);
       const inst = { uid: s.nextUid++, id: chosen.id, roll: Math.round(rand(0.15, 1) * 100) / 100, rerolls: 0 };
       s.relics = [inst, ...s.relics];
+      if (!s.discoveredRelics.includes(chosen.id)) {
+        s.discoveredRelics = [...s.discoveredRelics, chosen.id];
+      }
       if (s.equippedRelics.length < relicSlots(s) && !s.equippedRelics.some((u) => s.relics.find((x) => x.uid === u)?.id === chosen.id)) {
         s.equippedRelics = [...s.equippedRelics, inst.uid];
       }

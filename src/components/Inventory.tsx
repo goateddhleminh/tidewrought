@@ -1,16 +1,18 @@
 import { useState } from 'react';
 import { actions } from '../game/actions';
-import { BALANCE, RARITY_COLOR } from '../game/balance';
+import { BALANCE, RARITY_COLOR, RARITY_LABEL } from '../game/balance';
 import { BAITS, baitDef } from '../game/data/bait';
+import { COSMETICS } from '../game/data/cosmetics';
 import { FISH_BY_ID } from '../game/data/fish';
 import { RELICS, RELIC_BY_ID, relicValue } from '../game/data/relics';
+import { HELPERS, RODS } from '../game/data/upgrades';
 import { computeStats, mutationMultiplier, relicSlots } from '../game/engine';
 import { fmt, fmtInt } from '../game/format';
 import { getState, useTick } from '../game/state';
-import { CHEST_TIERS, type BaitId, type ChestTier } from '../game/types';
-import { FishSprite, Icon, MutationBadges, RarityBadge, Sprite, Tip } from './PixelUI';
+import { CHEST_TIERS, RARITIES, rarityIndex, type BaitId, type ChestTier, type Rarity } from '../game/types';
+import { FishSprite, Icon, MutationBadges, RARITY_SHAPE, RarityBadge, Sprite, Tip } from './PixelUI';
 
-export function Inventory({ section }: { section: 'bait' | 'relics' }) {
+export function Inventory({ section }: { section: 'inventory' | 'bait' | 'relics' }) {
   useTick();
   const s = getState();
   const st = computeStats(s);
@@ -27,6 +29,9 @@ export function Inventory({ section }: { section: 'bait' | 'relics' }) {
     cosmeticName: string | null;
   } | null>(null);
 
+  const [fishRarityFilter, setFishRarityFilter] = useState<Rarity | 'all' | 'mutated'>('all');
+  const [fishSort, setFishSort] = useState<'newest' | 'value' | 'size' | 'rarity'>('value');
+
   const handleOpenChest = (tier: ChestTier) => {
     if (s.chests[tier] <= 0) return;
     setOpeningTier(tier);
@@ -38,6 +43,338 @@ export function Inventory({ section }: { section: 'bait' | 'relics' }) {
   };
 
   const fishRerollCost = Math.ceil(BALANCE.altarFishBase * Math.pow(BALANCE.altarFishGrowth, s.altarRerolls));
+
+  // Dedicated full Inventory tab: shows ALL Fish, Auto-Sell Customizer, Owned Gear, Materials & Chests
+  if (section === 'inventory') {
+    const ownedRods = RODS.filter((r) => r.tier <= s.highestRodTier);
+    const hiredHelpers = HELPERS.filter((h) => (s.helpers[h.id] ?? 0) > 0);
+    const ownedCosmetics = COSMETICS.filter((c) => s.cosmetics.owned.includes(c.id));
+
+    const filteredFish = s.inventory
+      .filter((item) => {
+        const def = FISH_BY_ID[item.fishId];
+        if (!def) return false;
+        if (fishRarityFilter === 'mutated') return item.mutations.length > 0;
+        if (fishRarityFilter !== 'all') return def.rarity === fishRarityFilter;
+        return true;
+      })
+      .sort((a, b) => {
+        const da = FISH_BY_ID[a.fishId]!;
+        const db = FISH_BY_ID[b.fishId]!;
+        const va = a.preMutValue * mutationMultiplier(a.mutations, a.glitchMult, st.cursedKeep);
+        const vb = b.preMutValue * mutationMultiplier(b.mutations, b.glitchMult, st.cursedKeep);
+        if (fishSort === 'value') return vb - va;
+        if (fishSort === 'size') return b.size - a.size;
+        if (fishSort === 'rarity') return rarityIndex(db.rarity) - rarityIndex(da.rarity) || vb - va;
+        return b.uid - a.uid;
+      });
+
+    return (
+      <div className="flex flex-col gap-3 max-h-[540px] overflow-y-auto pr-1">
+        {/* Materials, Currencies & Chests Pouch */}
+        <div className="pixel-box p-2.5 flex flex-col gap-2">
+          <div className="font-heading text-xs text-[#f2c02a]">BACKPACK & MATERIALS POUCH</div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-xs">
+            <div className="bg-[#0b1020] p-1.5 border border-[#1a1228] flex items-center gap-1.5">
+              <Sprite group="items" name="coin" scale={1} />
+              <div>
+                <div className="text-[#9aa8b8]">Coins</div>
+                <div className="font-num font-bold text-sm text-[#f2c02a]">{fmt(s.coins)}</div>
+              </div>
+            </div>
+            <div className="bg-[#0b1020] p-1.5 border border-[#1a1228] flex items-center gap-1.5">
+              <Sprite group="items" name="pearl" scale={1} />
+              <div>
+                <div className="text-[#9aa8b8]">Pearls</div>
+                <div className="font-num font-bold text-sm text-[#ff8ad8]">{fmtInt(s.pearls)}</div>
+              </div>
+            </div>
+            <div className="bg-[#0b1020] p-1.5 border border-[#1a1228] flex items-center gap-1.5">
+              <Sprite group="items" name="cursed_shard" scale={1} />
+              <div>
+                <div className="text-[#9aa8b8]">Shards</div>
+                <div className="font-num font-bold text-sm text-[#a45af0]">{fmtInt(s.shards)}</div>
+              </div>
+            </div>
+            <div className="bg-[#0b1020] p-1.5 border border-[#1a1228] flex items-center gap-1.5">
+              <Icon name="hook" scale={1} hue={40} />
+              <div>
+                <div className="text-[#9aa8b8]">Scrap</div>
+                <div className="font-num font-bold text-sm text-[#d0b090]">{fmtInt(s.scrap)}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Owned Baits & Chests Summary */}
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-1 pt-1">
+            {BAITS.map((b) => (
+              <button
+                key={b.id}
+                type="button"
+                disabled={s.bait[b.id] <= 0 && s.equippedBait !== b.id}
+                onClick={() => actions.equipBait(b.id)}
+                className={`btn-pixel p-1.5 text-left flex items-center gap-1.5 text-xs ${
+                  s.equippedBait === b.id ? 'is-pressed ring-1 ring-[#58b84a]' : ''
+                }`}
+              >
+                <Sprite group="bait" name={b.id} scale={1} />
+                <div className="truncate">
+                  <div className="font-bold truncate">{b.name}</div>
+                  <div className="font-num text-[#fff6a8]">x{fmtInt(s.bait[b.id])}</div>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Owned Gear Summary (Rods, Helpers, Relics, Cosmetics) */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-1 text-xs">
+            <div className="bg-[#0b1020] p-1.5 border border-[#26395c]">
+              <div className="text-[#9aa8b8]">Equipped Rod</div>
+              <div className="font-bold text-[#f2c02a]">
+                {RODS[s.rodTier - 1]?.name} ({ownedRods.length}/{RODS.length})
+              </div>
+            </div>
+            <div className="bg-[#0b1020] p-1.5 border border-[#26395c]">
+              <div className="text-[#9aa8b8]">Relics Owned</div>
+              <div className="font-bold text-[#a45af0]">
+                {s.relics.length} ({s.equippedRelics.length}/{relicSlots(s)} Eq)
+              </div>
+            </div>
+            <div className="bg-[#0b1020] p-1.5 border border-[#26395c]">
+              <div className="text-[#9aa8b8]">Helpers Hired</div>
+              <div className="font-bold text-[#58b84a]">
+                {hiredHelpers.length} / {HELPERS.length}
+              </div>
+            </div>
+            <div className="bg-[#0b1020] p-1.5 border border-[#26395c]">
+              <div className="text-[#9aa8b8]">Cosmetics</div>
+              <div className="font-bold text-[#3cf0d0]">
+                {ownedCosmetics.length} / {COSMETICS.length}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Auto-Sell Customization Section */}
+        <div className="pixel-box p-2.5 flex flex-col gap-2 text-xs">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="font-heading text-xs text-[#f2c02a]">
+              AUTO-SELL CUSTOMIZATION
+            </span>
+            <button
+              type="button"
+              onClick={actions.toggleAutoSell}
+              className={`btn-pixel px-2.5 py-1 text-xs font-bold ${
+                s.autoSell ? 'text-[#58b84a]' : 'text-[#f2a02a]'
+              }`}
+            >
+              Auto-Sell: {s.autoSell ? `ON (${Math.round(st.autoSellRate * 100)}%)` : 'OFF'}
+            </button>
+          </div>
+          <div className="text-[#b8c7e0]">
+            Choose which fish Rarities, Mutations, and Sizes (cm) get sold automatically. Any fish that does NOT match is stored in your Fish Inventory below!
+          </div>
+
+          <div className="flex flex-wrap items-center gap-1">
+            <span className="font-bold text-[#eef4ff] mr-1">Rarities to Sell:</span>
+            {RARITIES.map((r) => {
+              const checked = s.autoSellConfig.rarities[r];
+              return (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => actions.toggleAutoSellRarity(r)}
+                  className={`btn-pixel px-2 py-0.5 text-xs font-bold flex items-center gap-1 ${
+                    checked ? 'is-pressed' : 'opacity-60'
+                  }`}
+                  style={{ color: RARITY_COLOR[r] }}
+                >
+                  <span>{checked ? '☑' : '☐'}</span>
+                  <span>
+                    {RARITY_SHAPE[r]} {RARITY_LABEL[r]}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-[#26395c]">
+            <div className="flex flex-wrap items-center gap-1">
+              <span className="font-bold text-[#eef4ff] mr-1">Mutated Fish:</span>
+              {(
+                [
+                  [0, 'Sell Mutated'],
+                  [1, 'Keep 1+ Mut'],
+                  [2, 'Keep 2+ Mut'],
+                ] as const
+              ).map(([val, label]) => (
+                <button
+                  key={val}
+                  type="button"
+                  onClick={() => actions.updateAutoSellConfig({ keepMutationsAtLeast: val })}
+                  className={`btn-pixel px-2 py-0.5 text-xs ${
+                    s.autoSellConfig.keepMutationsAtLeast === val
+                      ? 'is-pressed text-[#f2c02a] font-bold'
+                      : ''
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="flex items-center gap-1">
+                <span>Min cm:</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={500}
+                  value={s.autoSellConfig.minSizeCm}
+                  onChange={(e) =>
+                    actions.updateAutoSellConfig({
+                      minSizeCm: Math.max(0, Number(e.target.value) || 0),
+                    })
+                  }
+                  className="w-14 px-1 py-0.5 bg-[#0b1020] border border-[#26395c] text-[#eef4ff] font-num text-center"
+                />
+              </label>
+              <label className="flex items-center gap-1">
+                <span>Max cm (0=any):</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={500}
+                  value={s.autoSellConfig.maxSizeCm}
+                  onChange={(e) =>
+                    actions.updateAutoSellConfig({
+                      maxSizeCm: Math.max(0, Number(e.target.value) || 0),
+                    })
+                  }
+                  className="w-14 px-1 py-0.5 bg-[#0b1020] border border-[#26395c] text-[#eef4ff] font-num text-center"
+                />
+              </label>
+            </div>
+          </div>
+        </div>
+
+        {/* All Fish in Inventory */}
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="font-heading text-xs text-[#f2c02a]">
+              FISH INVENTORY ({s.inventory.length}/{BALANCE.inventoryCap})
+            </span>
+            <button
+              type="button"
+              disabled={s.inventory.length === 0}
+              onClick={actions.sellAllFish}
+              className="btn-pixel px-2.5 py-1 text-xs font-bold text-[#f2c02a]"
+            >
+              Sell All Unlocked (100% Value)
+            </button>
+          </div>
+
+          {/* Filter & Sort Controls */}
+          <div className="flex flex-wrap items-center justify-between gap-1.5 text-xs">
+            <div className="flex flex-wrap items-center gap-1">
+              {(['all', 'mutated', ...RARITIES] as const).map((f) => (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => setFishRarityFilter(f)}
+                  className={`btn-pixel px-1.5 py-0.5 text-xs uppercase ${
+                    fishRarityFilter === f ? 'is-pressed text-[#f2c02a] font-bold' : ''
+                  }`}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-[#9aa8b8]">Sort:</span>
+              {(['value', 'size', 'rarity', 'newest'] as const).map((srt) => (
+                <button
+                  key={srt}
+                  type="button"
+                  onClick={() => setFishSort(srt)}
+                  className={`btn-pixel px-1.5 py-0.5 text-xs uppercase ${
+                    fishSort === srt ? 'is-pressed text-[#58b84a] font-bold' : ''
+                  }`}
+                >
+                  {srt}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {filteredFish.length === 0 ? (
+            <div className="pixel-box p-4 text-center text-xs text-[#9aa8b8] italic">
+              No fish in your inventory match this filter. Uncheck rarities in the Auto-Sell Customization above or toggle Auto-Sell OFF to store caught fish here!
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1">
+              {filteredFish.map((item) => {
+                const def = FISH_BY_ID[item.fishId];
+                if (!def) return null;
+                const val =
+                  item.preMutValue * mutationMultiplier(item.mutations, item.glitchMult, st.cursedKeep);
+                return (
+                  <div
+                    key={item.uid}
+                    className={`slot-${def.rarity} p-1.5 flex flex-wrap items-center justify-between gap-2`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <FishSprite fishId={def.id} mutations={item.mutations} baseScale={1} />
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-bold text-sm" style={{ color: RARITY_COLOR[def.rarity] }}>
+                            {def.name}
+                          </span>
+                          <RarityBadge rarity={def.rarity} compact />
+                          <MutationBadges mutations={item.mutations} glitchMult={item.glitchMult} />
+                        </div>
+                        <div className="text-xs text-[#9aa8b8]">
+                          Size: <strong className="text-[#eef4ff]">{item.size}cm</strong> • Zone {def.zone} • Value:{' '}
+                          <strong className="text-[#f2c02a]">{fmt(val)}c</strong>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => actions.toggleLockFish(item.uid)}
+                        className="btn-pixel px-2 py-0.5 text-xs"
+                        title="Lock fish so Sell All and Tide Reset keep it"
+                      >
+                        {item.locked ? '🔒' : '🔓'}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={s.shards < fishRerollCost}
+                        onClick={() => actions.rerollFishMutations(item.uid)}
+                        className="btn-pixel px-2 py-0.5 text-xs font-bold text-[#a45af0]"
+                        title="Fate Altar: Reroll this fish's mutations"
+                      >
+                        🔮 Reroll ({fishRerollCost})
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!!item.locked}
+                        onClick={() => actions.sellFish(item.uid)}
+                        className="btn-pixel px-2 py-0.5 text-xs font-bold text-[#f2c02a]"
+                      >
+                        Sell
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   if (section === 'bait') {
     return (
@@ -176,91 +513,6 @@ export function Inventory({ section }: { section: 'bait' | 'relics' }) {
             </div>
           )}
         </div>
-
-        {/* Fish Cooler & Fate Altar Fish Mutation Reroll */}
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-center justify-between">
-            <span className="font-heading text-xs text-[#f2c02a]">
-              FISH COOLER ({s.inventory.length}/{BALANCE.inventoryCap}) & FATE ALTAR
-            </span>
-            <button
-              type="button"
-              disabled={s.inventory.length === 0}
-              onClick={actions.sellAllFish}
-              className="btn-pixel px-2.5 py-1 text-xs font-bold text-[#f2c02a]"
-            >
-              Sell All Unlocked (100% Value)
-            </button>
-          </div>
-          <div className="text-xs text-[#b8c7e0]">
-            Toggle Auto-Sell OFF on the scene to hold fish here, sell manually for 100% value, or spend{' '}
-            <strong className="text-[#a45af0]">{fishRerollCost} Cursed Shards</strong> at the Fate Altar to reroll a fish's mutations!
-          </div>
-
-          {s.inventory.length === 0 ? (
-            <div className="pixel-box p-4 text-center text-xs text-[#9aa8b8] italic">
-              Cooler is empty. Turn Auto-Sell OFF below the scene to keep catches for the Fate Altar.
-            </div>
-          ) : (
-            <div className="flex flex-col gap-1 max-h-60 overflow-y-auto pr-1">
-              {s.inventory.map((item) => {
-                const def = FISH_BY_ID[item.fishId];
-                if (!def) return null;
-                const val =
-                  item.preMutValue * mutationMultiplier(item.mutations, item.glitchMult, st.cursedKeep);
-                return (
-                  <div
-                    key={item.uid}
-                    className={`slot-${def.rarity} p-1.5 flex flex-wrap items-center justify-between gap-2`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <FishSprite fishId={def.id} mutations={item.mutations} baseScale={1} />
-                      <div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-bold text-sm" style={{ color: RARITY_COLOR[def.rarity] }}>
-                            {def.name}
-                          </span>
-                          <RarityBadge rarity={def.rarity} compact />
-                          <MutationBadges mutations={item.mutations} glitchMult={item.glitchMult} />
-                        </div>
-                        <div className="text-xs text-[#9aa8b8]">
-                          {item.size}cm • Value: <strong className="text-[#f2c02a]">{fmt(val)}c</strong>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => actions.toggleLockFish(item.uid)}
-                        className="btn-pixel px-2 py-0.5 text-xs"
-                        title="Lock fish so Sell All and Tide Reset keep it"
-                      >
-                        {item.locked ? '🔒' : '🔓'}
-                      </button>
-                      <button
-                        type="button"
-                        disabled={s.shards < fishRerollCost}
-                        onClick={() => actions.rerollFishMutations(item.uid)}
-                        className="btn-pixel px-2 py-0.5 text-xs font-bold text-[#a45af0]"
-                        title="Fate Altar: Reroll this fish's mutations"
-                      >
-                        🔮 Reroll ({fishRerollCost} Shards)
-                      </button>
-                      <button
-                        type="button"
-                        disabled={!!item.locked}
-                        onClick={() => actions.sellFish(item.uid)}
-                        className="btn-pixel px-2 py-0.5 text-xs font-bold text-[#f2c02a]"
-                      >
-                        Sell
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
       </div>
     );
   }
@@ -292,7 +544,7 @@ export function Inventory({ section }: { section: 'bait' | 'relics' }) {
 
       {s.relics.length === 0 ? (
         <div className="pixel-box p-6 text-center text-sm text-[#9aa8b8] italic">
-          No relics yet! Open Treasure Chests in the Bait & Chests tab to find relics.
+          No relics yet! Open Treasure Chests in the Bait tab to find relics.
         </div>
       ) : (
         <div className="flex flex-col gap-1.5 max-h-[420px] overflow-y-auto pr-1">

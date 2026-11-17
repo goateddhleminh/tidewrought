@@ -19,10 +19,11 @@ import { useGameLoop } from './game/useGameLoop';
 
 type RightTab =
   | 'shop'
+  | 'inventory'
+  | 'codex'
   | 'helpers'
   | 'bait'
   | 'relics'
-  | 'codex'
   | 'skills'
   | 'prestige'
   | 'achievements'
@@ -32,31 +33,32 @@ type MobileView = 'scene' | 'stats' | 'tabs';
 
 const RIGHT_TABS: { id: RightTab; label: string; icon: string }[] = [
   { id: 'shop', label: 'Shop', icon: 'value' },
+  { id: 'inventory', label: 'Inventory', icon: 'fish' },
+  { id: 'codex', label: 'Codex', icon: 'achievement' },
   { id: 'helpers', label: 'Helpers', icon: 'heart' },
   { id: 'bait', label: 'Bait', icon: 'bait' },
   { id: 'relics', label: 'Relics', icon: 'relic' },
-  { id: 'codex', label: 'Codex', icon: 'fish' },
   { id: 'skills', label: 'Skills', icon: 'xp_star' },
   { id: 'prestige', label: 'Prestige', icon: 'offline' },
-  { id: 'achievements', label: 'Feats', icon: 'achievement' },
+  { id: 'achievements', label: 'Feats', icon: 'luck' },
   { id: 'settings', label: 'Config', icon: 'hook' },
 ];
 
 const TUTORIAL_STEPS = [
   {
     step: 1,
-    title: 'Step 1/3: Automatic Dock Fishing',
-    text: 'Your angler casts, waits, and reels automatically! Watch your first fish jump into the bucket.',
+    title: 'Step 1/3: Start Fishing (Manual or Auto)',
+    text: 'Click ▶ START FISHING on the dock to choose between Manual Fishing (you reel each bite) or Automatic Fishing (auto-reels with an upgradeable Perfect chance)!',
   },
   {
     step: 2,
-    title: 'Step 2/3: Active Timing Bonus',
-    text: 'When the ! icon appears above the bobber, click REEL NOW! inside the gold bar for a Perfect x1.25 catch!',
+    title: 'Step 2/3: Perfect Timing & Auto-Reeler',
+    text: 'In Manual mode, click REEL NOW! inside the gold bar when a fish bites. In Auto mode, upgrade "Clockwork Auto-Reeler" in the Shop to boost automatic Perfect Reels!',
   },
   {
     step: 3,
-    title: 'Step 3/3: Upgrade Your Tackle',
-    text: 'Open the Shop tab on the right and spend your Coins on a Spool Reel, Braided Line, or Bamboo Rod!',
+    title: 'Step 3/3: Customize Auto-Sell, Inventory & Codex',
+    text: 'Use ⚙ Auto-Sell Filter to choose which sizes/rarities to sell vs. keep in your Inventory, and track all obtained Rods & Fish in the Codex!',
   },
 ];
 
@@ -191,10 +193,11 @@ function GameShell() {
         >
           <div className="panel-navy p-2.5 flex flex-col gap-2.5 h-full">
             {/* Right Tab Navigation */}
-            <nav className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-3 gap-1">
+            <nav className="grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-5 gap-1">
               {RIGHT_TABS.map((t) => {
                 const active = rightTab === t.id;
                 const badge =
+                  (t.id === 'inventory' && s.inventory.length > 0) ||
                   (t.id === 'bait' && totalChests > 0) ||
                   (t.id === 'skills' && s.skillPoints > 0) ||
                   (t.id === 'prestige' && resetPearls > 0);
@@ -203,13 +206,13 @@ function GameShell() {
                     key={t.id}
                     type="button"
                     onClick={() => setRightTab(t.id)}
-                    className={`btn-pixel px-2 py-1 text-xs font-bold flex items-center justify-between gap-1 ${
+                    className={`btn-pixel px-1.5 py-1 text-xs font-bold flex items-center justify-between gap-1 ${
                       active ? 'is-pressed text-[#f2c02a] ring-1 ring-[#f2c02a]' : ''
                     }`}
                   >
                     <span className="flex items-center gap-1 truncate">
                       <Icon name={t.icon} scale={1} />
-                      <span>{t.label}</span>
+                      <span className="truncate">{t.label}</span>
                     </span>
                     {badge && (
                       <span className="w-2 h-2 bg-[#58b84a] border border-[#1a1228] shrink-0" />
@@ -222,10 +225,11 @@ function GameShell() {
             {/* Active Tab Body */}
             <div className="flex-1">
               {rightTab === 'shop' && <Shop mode="shop" />}
+              {rightTab === 'inventory' && <Inventory section="inventory" />}
+              {rightTab === 'codex' && <Codex />}
               {rightTab === 'helpers' && <Shop mode="helpers" />}
               {rightTab === 'bait' && <Inventory section="bait" />}
               {rightTab === 'relics' && <Inventory section="relics" />}
-              {rightTab === 'codex' && <Codex />}
               {rightTab === 'skills' && <Prestige tab="skills" />}
               {rightTab === 'prestige' && <Prestige tab="prestige" />}
               {rightTab === 'achievements' && <Prestige tab="achievements" />}
